@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaSmart IoT - Monitoring & Kontrol Penyiraman Otomatis</title>
+  <meta name="description" content="Dashboard monitoring real-time sensor suhu, kelembapan tanah, dan pH tanah serta kontrol otomatis & manual penyiraman air dan pupuk IoT.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Vanilla CSS Design System -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Background Glow & Grid Ornaments -->
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-blob blob-3"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- TOP NAVIGATION & STATUS BAR -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="brand-icon-wrapper">
+          <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)"/>
+            <defs>
+              <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="pulse-ring"></span>
+        </div>
+        <div>
+          <h1 class="brand-title">AquaSmart <span>IoT</span></h1>
+          <p class="brand-subtitle">Smart Irrigation & Fertigation System</p>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link-btn active" title="Dashboard Monitoring & Kontrol Real-Time">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="database.html" class="nav-link-btn" title="Database Sensor & Riwayat Penyiraman Keseluruhan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>Database & Riwayat</span>
+        </a>
+      </nav>
+
+      <!-- Quick Status Badges -->
+      <div class="nav-status-group">
+        <div class="status-pill device-status" id="deviceStatusPill" title="Status koneksi gateway & perangkat">
+          <span class="status-dot online"></span>
+          <span class="status-label" id="deviceStatusText">Gateway: Terhubung</span>
+          <span class="source-tag" id="sourceTag">Simulasi</span>
+        </div>
+
+        <div class="status-pill clock-pill" id="digitalClockPill">
+          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="digitalClock">--:--:-- WIB</span>
+        </div>
+
+        <!-- Utility Buttons -->
+        <button id="btnSoundToggle" class="btn-icon" title="Toggle Efek Suara (Audio Feedback)" aria-label="Audio Feedback">
+          <svg id="iconSoundOn" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="iconSoundOff" class="icon-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <button id="btnOpenSettings" class="btn-icon" title="Pengaturan Threshold & Kode ESP32" aria-label="Buka Pengaturan">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-container">
+      
+      <!-- MODE & QUICK ACTIONS BANNER -->
+      <section class="mode-banner" id="modeBanner">
+        <div class="mode-info-block">
+          <div class="mode-icon-circle" id="modeIndicatorIcon">
+            <svg class="mode-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="mode-title-row">
+              <span class="mode-caption">Mode Operasional Aktif:</span>
+              <span class="badge-mode" id="activeModeBadge">MODE AUTO</span>
+            </div>
+            <p class="mode-description" id="modeDescriptionText">
+              Sistem otomatis memantau kelembapan tanah. Pompa air akan aktif mandiri bila kelembapan &lt; <strong id="descThreshMin">40%</strong> dan mati saat mencapai target <strong id="descThreshMax">65%</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="mode-switch-container">
+          <div class="mode-toggle-switch" role="group" aria-label="Pemilihan Mode">
+            <button id="btnModeAuto" class="mode-btn active" data-mode="auto">
+              <span class="radio-dot"></span>
+              <span>AUTO</span>
+            </button>
+            <button id="btnModeManual" class="mode-btn" data-mode="manual">
+              <span class="radio-dot"></span>
+              <span>MANUAL</span>
+            </button>
+          </div>
+          <button id="btnEmergencyStop" class="btn-emergency" title="Matikan semua pompa seketika">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <rect x="9" y="9" width="6" height="6"></rect>
+            </svg>
+            <span>STOP DARURAT</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SENSOR TELEMETRY CARDS (REAL-TIME METRICS) -->
+      <section class="telemetry-grid" aria-label="Data Realtime Sensor">
+        
+        <!-- CARD 1: SUHU LINGKUNGAN -->
+        <article class="sensor-card card-suhu" id="cardSuhu">
+          <div class="card-header">
+            <div class="sensor-title-wrapper">
+              <div class="sensor-badge-icon icon-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="sensor-name">Suhu Udara & Tanah</h3>
+                <span class="sensor-tag">Sensor DHT22 / DS18B20</span>
+              </div>
+            </div>
+            <span class="badge-status status-optimal" id="suhuStatusBadge">Optimal</span>
+          </div>
+
+          <div class="metric-main">
+            <div class="metric-number-group">
+              <span class="metric-value" id="suhuValue">28.4</span>
+              <span class="metric-unit">°C</span>
+            </div>
+            <div class="metric-gauge-mini">
+              <div class="thermometer-bar">
+                <div class="thermometer-fill" id="suhuBarFill" style="width: 58%;"></div>
+              </div>
+              <div class="gauge-ticks">
+                <span>0°C</span>
+                <span>25°C</span>
+                <span>50°C</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Min Hari Ini</span>
+              <span class="stat-val" id="suhuMin">26.2 °C</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Maks Hari Ini</span>
+              <span class="stat-val" id="suhuMax">31.8 °C</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Kondisi</span>
+              <span class="stat-val" id="suhuComfort">Nyaman</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 2: KELEMBAPAN TANAH -->
+        <article class="sensor-card card-moisture" id="cardMoisture">
+          <div class="card-header">
+            <div class="sensor-title-wrapper">
+              <div class="sensor-badge-icon icon-emerald">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="sensor-name">Kelembapan Tanah</h3>
+                <span class="sensor-tag">Capacitive Moisture Sensor</span>
+              </div>
+            </div>
+            <span class="badge-status status-optimal" id="moistureStatusBadge">Lembap Ideal</span>
+          </div>
+
+          <div class="metric-main">
+            <div class="metric-number-group">
+              <span class="metric-value" id="moistureValue">45.0</span>
+              <span class="metric-unit">%</span>
+            </div>
+            <div class="circular-progress-wrapper">
+              <svg class="circular-svg" viewBox="0 0 100 100">
+                <circle class="circle-bg" cx="50" cy="50" r="42"></circle>
+                <circle class="circle-progress" id="moistureCircleProgress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="145"></circle>
+              </svg>
+              <div class="circle-icon-center">
+                <span id="moistureCircleText">45%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Batas Siram (Min)</span>
+              <span class="stat-val" id="moistureThreshMin">40 %</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Batas Cukup (Max)</span>
+              <span class="stat-val" id="moistureThreshMax">65 %</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Kebutuhan Air</span>
+              <span class="stat-val" id="waterNeedStatus">Siaga</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 3: pH TANAH -->
+        <article class="sensor-card card-ph" id="cardPh">
+          <div class="card-header">
+            <div class="sensor-title-wrapper">
+              <div class="sensor-badge-icon icon-violet">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="sensor-name">Derajat Keasaman (pH)</h3>
+                <span class="sensor-tag">Analog pH Sensor 4502C</span>
+              </div>
+            </div>
+            <span class="badge-status status-optimal" id="phStatusBadge">Netral (Ideal)</span>
+          </div>
+
+          <div class="metric-main">
+            <div class="metric-number-group">
+              <span class="metric-value" id="phValue">6.80</span>
+              <span class="metric-unit">pH</span>
+            </div>
+            <!-- Spectrum Bar pH -->
+            <div class="ph-spectrum-container">
+              <div class="ph-spectrum-bar">
+                <div class="ph-pointer" id="phPointer" style="left: 48%;"></div>
+              </div>
+              <div class="ph-scale-labels">
+                <span class="acidic">Asam (1)</span>
+                <span class="neutral">Netral (7)</span>
+                <span class="alkaline">Basa (14)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Zona Ideal</span>
+              <span class="stat-val">6.0 - 7.2 pH</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Status Tanah</span>
+              <span class="stat-val" id="phStatusText">Subur / Prima</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Efek Pupuk</span>
+              <span class="stat-val" id="phNutrientAbsorb">Serapan Optimal</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 4: STATUS TANGKI & RESERVOIR -->
+        <article class="sensor-card card-reservoir" id="cardReservoir">
+          <div class="card-header">
+            <div class="sensor-title-wrapper">
+              <div class="sensor-badge-icon icon-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <div>
+                <h3 class="sensor-name">Tangki & Akumulasi</h3>
+                <span class="sensor-tag">Level Cadangan Cairan</span>
+              </div>
+            </div>
+            <span class="badge-status status-optimal" id="tankStatusBadge">Cukup</span>
+          </div>
+
+          <div class="tank-levels-group">
+            <!-- Tangki Air -->
+            <div class="tank-subitem">
+              <div class="tank-info-row">
+                <span class="tank-label">💧 Tangki Air Utama</span>
+                <span class="tank-val" id="valTangkiAir">85%</span>
+              </div>
+              <div class="linear-bar">
+                <div class="linear-bar-fill fill-water" id="fillTangkiAir" style="width: 85%;"></div>
+              </div>
+            </div>
+            <!-- Tangki Pupuk -->
+            <div class="tank-subitem">
+              <div class="tank-info-row">
+                <span class="tank-label">🌿 Tangki Pupuk Cair (NPK)</span>
+                <span class="tank-val" id="valTangkiPupuk">92%</span>
+              </div>
+              <div class="linear-bar">
+                <div class="linear-bar-fill fill-fert" id="fillTangkiPupuk" style="width: 92%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Air Terpakai Hari Ini</span>
+              <span class="stat-val" id="totalAirVal">4.50 L</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Pupuk Terpakai</span>
+              <span class="stat-val" id="totalPupukVal">75 ml</span>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- ACTUATOR CONTROLS SECTION (TOMBOLE PENYIRAMAN AIR & PUPUK) -->
+      <section class="controls-section" aria-label="Kontrol Aktuator Penyiraman">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="section-title">Panel Kontrol Aktuator</h2>
+            <p class="section-subtitle">Kendali sakelar pompa air dan pompa pupuk secara langsung atau terprogram</p>
+          </div>
+          <div class="controls-status-note" id="controlModeNote">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span id="controlNoteText">Mode Auto: Tombol manual tetap dapat digunakan sebagai override sementara.</span>
+          </div>
+        </div>
+
+        <div class="actuators-grid">
+          
+          <!-- ACTUATOR 1: KONTROL PENYIRAMAN AIR -->
+          <div class="actuator-card" id="actuatorWaterCard">
+            <div class="actuator-glow glow-water"></div>
+            
+            <div class="actuator-header">
+              <div class="actuator-title-box">
+                <div class="actuator-icon-wrap icon-water">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="actuator-name">Pompa Penyiraman Air</h3>
+                  <span class="actuator-sub">Relay 1 - Katup Irigasi Sprinkler</span>
+                </div>
+              </div>
+              <div class="actuator-state-badge state-off" id="waterStateBadge">
+                <span class="pulse-point"></span>
+                <span id="waterStateText">STANDBY / MATI</span>
+              </div>
+            </div>
+
+            <!-- Animasi Aliran Air -->
+            <div class="pipe-flow-animation" id="waterAnimation">
+              <div class="flow-wave"></div>
+              <div class="spray-droplets">
+                <span class="drop d1"></span>
+                <span class="drop d2"></span>
+                <span class="drop d3"></span>
+                <span class="drop d4"></span>
+              </div>
+              <span class="flow-label" id="waterFlowLabel">Pipa Siaga (Tidak Ada Aliran)</span>
+            </div>
+
+            <!-- Tombol Utama Saklar Pompa Air -->
+            <div class="main-toggle-wrapper">
+              <button id="btnToggleWater" class="btn-actuator-main btn-water-off" aria-label="Saklar Pompa Air">
+                <div class="btn-content">
+                  <svg class="btn-power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                  </svg>
+                  <span class="btn-text" id="btnWaterText">NYALAKAN PENYIRAMAN AIR</span>
+                </div>
+                <div class="btn-countdown hidden" id="waterCountdown">
+                  <span class="countdown-num" id="waterCountdownNum">15</span>
+                  <span class="countdown-unit">detik tersisa</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Quick Burst Buttons (Durasi Tertentu) -->
+            <div class="preset-triggers">
+              <span class="preset-label">Siram Cepat Terjadwal:</span>
+              <div class="preset-btns-row">
+                <button class="btn-preset" data-action="water-burst" data-duration="10">+10 Detik</button>
+                <button class="btn-preset" data-action="water-burst" data-duration="30">+30 Detik</button>
+                <button class="btn-preset" data-action="water-burst" data-duration="60">+1 Menit</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ACTUATOR 2: KONTROL PENYIRAMAN PUPUK -->
+          <div class="actuator-card" id="actuatorFertCard">
+            <div class="actuator-glow glow-fert"></div>
+            
+            <div class="actuator-header">
+              <div class="actuator-title-box">
+                <div class="actuator-icon-wrap icon-fert">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="actuator-name">Pompa Dosis Pupuk (Fertigasi)</h3>
+                  <span class="actuator-sub">Relay 2 - Dosing Pump Pupuk Cair NPK</span>
+                </div>
+              </div>
+              <div class="actuator-state-badge state-off" id="fertStateBadge">
+                <span class="pulse-point"></span>
+                <span id="fertStateText">STANDBY / MATI</span>
+              </div>
+            </div>
+
+            <!-- Animasi Aliran Pupuk -->
+            <div class="pipe-flow-animation fert-flow" id="fertAnimation">
+              <div class="flow-wave fert-wave"></div>
+              <div class="spray-droplets">
+                <span class="drop d-fert f1"></span>
+                <span class="drop d-fert f2"></span>
+                <span class="drop d-fert f3"></span>
+              </div>
+              <span class="flow-label" id="fertFlowLabel">Injektor Pupuk Siaga</span>
+            </div>
+
+            <!-- Tombol Utama Saklar Pompa Pupuk -->
+            <div class="main-toggle-wrapper">
+              <button id="btnToggleFert" class="btn-actuator-main btn-fert-off" aria-label="Saklar Pompa Pupuk">
+                <div class="btn-content">
+                  <svg class="btn-power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                  </svg>
+                  <span class="btn-text" id="btnFertText">AKTIFKAN PENYIRAMAN PUPUK</span>
+                </div>
+                <div class="btn-countdown hidden" id="fertCountdown">
+                  <span class="countdown-num" id="fertCountdownNum">5</span>
+                  <span class="countdown-unit">detik injeksi</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Quick Dose Presets (Takaran Pupuk ml) -->
+            <div class="preset-triggers">
+              <span class="preset-label">Injeksi Dosis Presisi:</span>
+              <div class="preset-btns-row">
+                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="10">Dosis 10 ml</button>
+                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="25">Dosis 25 ml</button>
+                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="50">Dosis 50 ml</button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- REAL-TIME CHARTS SECTION (GRAFIK SUHU, KELEMBAPAN TANAH, pH TANAH) -->
+      <section class="charts-section" aria-label="Grafik Real-Time Sensor">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="section-title">Grafik Pemantauan Real-Time</h2>
+            <p class="section-subtitle">Visualisasi tren temporal data sensor suhu, kelembapan, dan pH tanah</p>
+          </div>
+          
+          <div class="chart-controls-group">
+            <button id="btnPauseChart" class="btn-chart-ctrl" title="Jeda pembaruan grafik">
+              <svg id="iconPause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <svg id="iconPlay" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span id="chartPauseLabel">Jeda Live</span>
+            </button>
+            <button id="btnClearChart" class="btn-chart-ctrl" title="Reset titik grafik">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          
+          <!-- CHART 1: SUHU (°C) -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title-area">
+                <div class="chart-color-indicator dot-amber"></div>
+                <div>
+                  <h3 class="chart-title">Grafik Suhu Lingkungan (°C)</h3>
+                  <span class="chart-subtitle">Interval real-time • Suhu optimal 24°C - 32°C</span>
+                </div>
+              </div>
+              <div class="chart-current-stat stat-amber">
+                <span id="chartStatSuhu">28.4</span> °C
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chartSuhuCanvas"></canvas>
+            </div>
+            <div class="chart-legend-row">
+              <span class="legend-item"><span class="legend-box box-amber"></span> Suhu (°C)</span>
+              <span class="legend-item"><span class="legend-line line-red"></span> Ambang Panas (32°C)</span>
+            </div>
+          </div>
+
+          <!-- CHART 2: KELEMBAPAN TANAH (%) -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title-area">
+                <div class="chart-color-indicator dot-emerald"></div>
+                <div>
+                  <h3 class="chart-title">Grafik Kelembapan Tanah (%)</h3>
+                  <span class="chart-subtitle">Respon penyiraman otomatis • Target 40% - 65%</span>
+                </div>
+              </div>
+              <div class="chart-current-stat stat-emerald">
+                <span id="chartStatMoisture">45.0</span> %
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chartMoistureCanvas"></canvas>
+            </div>
+            <div class="chart-legend-row">
+              <span class="legend-item"><span class="legend-box box-emerald"></span> Kelembapan (%)</span>
+              <span class="legend-item"><span class="legend-line line-amber"></span> Batas Bawah Auto (<span id="legendThreshMin">40%</span>)</span>
+            </div>
+          </div>
+
+          <!-- CHART 3: pH TANAH -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title-area">
+                <div class="chart-color-indicator dot-violet"></div>
+                <div>
+                  <h3 class="chart-title">Grafik Derajat Keasaman pH Tanah</h3>
+                  <span class="chart-subtitle">Keseimbangan kimia tanah • Rentang ideal 6.0 - 7.2 pH</span>
+                </div>
+              </div>
+              <div class="chart-current-stat stat-violet">
+                <span id="chartStatPh">6.80</span> pH
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chartPhCanvas"></canvas>
+            </div>
+            <div class="chart-legend-row">
+              <span class="legend-item"><span class="legend-box box-violet"></span> Nilai pH</span>
+              <span class="legend-item"><span class="legend-line line-green"></span> Batas Netral 7.0</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ACTIVITY LOG & SYSTEM EVENTS -->
+      <section class="log-section" aria-label="Log Aktivitas & Notifikasi">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="section-title">Riwayat Aktivitas & Event Log</h2>
+            <p class="section-subtitle">Catatan kronologis deteksi sensor, trigger otomasi, dan tindakan pengguna</p>
+          </div>
+          <button id="btnExportLog" class="btn-chart-ctrl" title="Download Log Riwayat sebagai CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Ekspor CSV</span>
+          </button>
+        </div>
+
+        <div class="log-box">
+          <div class="log-table-header">
+            <span class="col-time">Waktu</span>
+            <span class="col-cat">Kategori</span>
+            <span class="col-msg">Aktivitas / Kejadian</span>
+          </div>
+          <div class="log-items-list" id="logList">
+            <!-- Diisi secara dinamis oleh JavaScript -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <span>🌱 <strong>AquaSmart IoT</strong> v1.0 • Sistem Monitoring & Irigasi Presisi</span>
+        <span class="footer-links">
+          <a href="#" id="linkESPGuide">Panduan Koneksi ESP32</a> • 
+          <a href="#" id="linkThresholdConfig">Ubah Ambang Batas</a>
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: PENGATURAN THRESHOLD & HARDWARE IoT -->
+  <div class="modal-overlay hidden" id="settingsModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Konfigurasi Sistem & Integrasi IoT</h3>
+            <p class="modal-subtitle">Atur batasan otomasi dan sambungkan perangkat ESP32/ESP8266 riil</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseModal" aria-label="Tutup Modal">&times;</button>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="tab-threshold">Ambang Batas Otomasi</button>
+        <button class="tab-btn" data-tab="tab-esp32">Integrasi Hardware ESP32</button>
+        <button class="tab-btn" data-tab="tab-code">Skrip Arduino / C++</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- TAB 1: AMBANG BATAS OTOMASI -->
+        <div class="tab-content active" id="tab-threshold">
+          <form id="settingsForm" class="settings-form">
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="inputThreshMin">Ambang Batas Bawah Kelembapan (Trigger Nyala Pompa)</label>
+                <span class="range-display" id="displayThreshMin">40%</span>
+              </div>
+              <input type="range" id="inputThreshMin" min="15" max="60" value="40" class="styled-range">
+              <span class="input-hint">Jika kelembapan tanah di bawah nilai ini pada Mode AUTO, penyiraman air akan otomatis menyala.</span>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="inputThreshMax">Target Kelembapan Maksimal (Trigger Mati Pompa)</label>
+                <span class="range-display" id="displayThreshMax">65%</span>
+              </div>
+              <input type="range" id="inputThreshMax" min="50" max="90" value="65" class="styled-range">
+              <span class="input-hint">Penyiraman akan berhenti otomatis jika kelembapan tanah telah mencapai persentase ini.</span>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="inputDuration">Durasi Maksimal Penyiraman Otomatis</label>
+                <span class="range-display" id="displayDuration">15 Detik</span>
+              </div>
+              <input type="range" id="inputDuration" min="5" max="120" step="5" value="15" class="styled-range">
+              <span class="input-hint">Batas waktu keamanan (safety timeout) pemadaman pompa agar tidak membanjiri tanaman.</span>
+            </div>
+
+            <div class="form-group-checkbox">
+              <label class="switch-control">
+                <input type="checkbox" id="checkSimulation" checked>
+                <span class="slider-round"></span>
+              </label>
+              <div class="checkbox-label-block">
+                <strong>Simulasi Data Natural Aktif</strong>
+                <span>Secara otomatis menghasilkan perubahan suhu & kelembapan tanah saat belum tersambung ke sensor fisik.</span>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-save-settings">Simpan Pengaturan</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: INTEGRASI ESP32 -->
+        <div class="tab-content" id="tab-esp32">
+          <div class="esp-guide-box">
+            <h4>📡 Skema Pengkabelan & Pinout ESP32:</h4>
+            <div class="pinout-table-wrap">
+              <table class="pinout-table">
+                <thead>
+                  <tr>
+                    <th>Komponen Sensor / Aktuator</th>
+                    <th>Tipe Sinyal</th>
+                    <th>Rekomendasi Pin ESP32</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>DHT22 / DHT11</strong> (Suhu & Kelembapan Udara)</td>
+                    <td>Digital Data</td>
+                    <td><span class="pin-badge">GPIO 4</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Capacitive Soil Moisture</strong> (Kelembapan Tanah)</td>
+                    <td>Analog ADC</td>
+                    <td><span class="pin-badge">GPIO 34 (ADC1_CH6)</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>PH-4502C Sensor</strong> (pH Tanah)</td>
+                    <td>Analog ADC</td>
+                    <td><span class="pin-badge">GPIO 35 (ADC1_CH7)</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Relay 1</strong> (Pompa Penyiraman Air)</td>
+                    <td>Digital Output</td>
+                    <td><span class="pin-badge">GPIO 26</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Relay 2</strong> (Pompa Pupuk Cair)</td>
+                    <td>Digital Output</td>
+                    <td><span class="pin-badge">GPIO 27</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 style="margin-top: 1.25rem;">🌐 Endpoint REST API untuk ESP32:</h4>
+            <div class="api-endpoint-box">
+              <div class="endpoint-line">
+                <span class="method post">POST</span>
+                <span class="url">http://&lt;IP_KOMPUTER_ANDA&gt;:3000/api/telemetry</span>
+              </div>
+              <p class="endpoint-desc">Format Payload JSON yang dikirim ESP32:</p>
+              <pre class="code-snippet"><code>{
+  "suhu": 28.5,
+  "kelembapan": 42.0,
+  "ph": 6.75,
+  "deviceId": "ESP32-Greenhouse-1"
+}</code></pre>
+              <p class="endpoint-desc">Server akan mengembalikan status relay terkini:</p>
+              <pre class="code-snippet"><code>{
+  "success": true,
+  "controls": {
+    "mode": "auto",
+    "pompaAir": true,
+    "pompaPupuk": false
+  }
+}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: KODE SKRIP ARDUINO / C++ -->
+        <div class="tab-content" id="tab-code">
+          <div class="code-guide-header">
+            <p>Salin kode ini dan upload ke ESP32 Anda via Arduino IDE. File juga tersedia di folder <code>esp32_firmware/esp32_penyiraman.ino</code>.</p>
+            <button class="btn-copy-code" id="btnCopyInoCode">Salin Kode</button>
+          </div>
+          <pre class="code-block-large"><code id="inoCodeBlock">/*
+  AquaSmart IoT - ESP32 Automatic Irrigation & Monitoring
+  Library yang diperlukan:
+  - WiFi.h
+  - HTTPClient.h
+  - ArduinoJson.h
+  - DHT.h
+*/
+
+#include &lt;WiFi.h&gt;
+#include &lt;HTTPClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+#include "DHT.h"
+
+// 1. Konfigurasi WiFi & Server
+const char* ssid = "NAMA_WIFI_ANDA";
+const char* password = "PASSWORD_WIFI";
+const char* serverUrl = "http://192.168.1.100:3000/api/telemetry"; // Ganti dengan IP PC Dashboard
+
+// 2. Definisi Pin
+#define DHTPIN 4
+#define DHTTYPE DHT22
+#define SOIL_PIN 34
+#define PH_PIN 35
+#define RELAY_AIR 26
+#define RELAY_PUPUK 27
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_AIR, OUTPUT);
+  pinMode(RELAY_PUPUK, OUTPUT);
+  digitalWrite(RELAY_AIR, HIGH);   // Relay Active LOW (Mati)
+  digitalWrite(RELAY_PUPUK, HIGH);
+
+  dht.begin();
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi Terhubung!");
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    // Baca sensor
+    float suhu = dht.readTemperature();
+    int soilRaw = analogRead(SOIL_PIN);
+    float kelembapan = map(soilRaw, 3200, 1400, 0, 100); // Kalibrasi tanah kering vs basah
+    kelembapan = constrain(kelembapan, 0, 100);
+
+    int phRaw = analogRead(PH_PIN);
+    float ph = 7.0 + ((2048 - phRaw) * 0.0035); // Rumus kalibrasi tegangan ke pH
+
+    // Buat JSON
+    StaticJsonDocument<200> doc;
+    doc["suhu"] = isnan(suhu) ? 28.0 : suhu;
+    doc["kelembapan"] = kelembapan;
+    doc["ph"] = ph;
+    doc["deviceId"] = "ESP32-Greenhouse-1";
+
+    String requestBody;
+    serializeJson(doc, requestBody);
+
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
+
+    int httpResponseCode = http.POST(requestBody);
+    if (httpResponseCode > 0) {
+      String response = http.getString();
+      StaticJsonDocument<300> resDoc;
+      deserializeJson(resDoc, response);
+
+      // Kontrol Relay Fisik dari feedback dashboard
+      bool pompaAir = resDoc["controls"]["pompaAir"];
+      bool pompaPupuk = resDoc["controls"]["pompaPupuk"];
+
+      digitalWrite(RELAY_AIR, pompaAir ? LOW : HIGH);
+      digitalWrite(RELAY_PUPUK, pompaPupuk ? LOW : HIGH);
+    }
+    http.end();
+  }
+  delay(3000); // Interval pengiriman data tiap 3 detik
+}</code></pre>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Feedback Elements (Web Audio Synthesizer used in JS) -->
+
+  <!-- Scripts -->
+  <script src="js/chart.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database & Riwayat - AquaSmart IoT</title>
+  <meta name="description" content="Arsip database historis data sensor dan riwayat penyiraman air serta fertigasi pupuk otomatis IoT.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Vanilla CSS Design System -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Background Glow & Grid Ornaments -->
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-blob blob-3"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- TOP NAVIGATION & STATUS BAR -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="brand-icon-wrapper">
+          <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)"/>
+            <defs>
+              <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="pulse-ring"></span>
+        </div>
+        <div>
+          <h1 class="brand-title">AquaSmart <span>IoT</span></h1>
+          <p class="brand-subtitle">Smart Irrigation & Fertigation System</p>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link-btn" title="Dashboard Monitoring & Kontrol Real-Time">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="database.html" class="nav-link-btn active" title="Database Sensor & Riwayat Penyiraman Keseluruhan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>Database & Riwayat</span>
+        </a>
+      </nav>
+
+      <!-- Quick Status Badges -->
+      <div class="nav-status-group">
+        <div class="status-pill device-status" id="deviceStatusPill" title="Status Database & Gateway">
+          <span class="status-dot online"></span>
+          <span class="status-label" id="deviceStatusText">Database: SQLite Aktif</span>
+          <span class="source-tag">Lokal WAL</span>
+        </div>
+
+        <div class="status-pill clock-pill" id="digitalClockPill">
+          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="digitalClock">--:--:-- WIB</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN DATABASE CONTENT -->
+    <main class="main-container">
+      
+      <!-- DATABASE HEADER -->
+      <section class="db-header">
+        <div class="db-title-row">
+          <div>
+            <h2 class="db-title">
+              Database Keseluruhan
+              <span class="db-title-badge">Data Records & History</span>
+            </h2>
+            <p class="db-subtitle">
+              Pusat penyimpanan telemetri sensor lingkungan dan rekap historis seluruh operasi penyiraman otomatis serta manual yang tersimpan secara persisten.
+            </p>
+          </div>
+          <div class="db-header-actions">
+            <button id="btnOpenClearModal" class="btn-db btn-db-danger" title="Bersihkan riwayat database">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Bersihkan Data</span>
+            </button>
+            <button id="btnGlobalRefresh" class="btn-db btn-db-primary" title="Segarkan seluruh data">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Refresh Sinkron</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUMMARY METRIC CARDS -->
+      <section class="db-metrics-grid">
+        <!-- Sensor Card -->
+        <div class="db-metric-card">
+          <div class="db-metric-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+            </svg>
+          </div>
+          <div class="db-metric-info">
+            <span class="db-metric-label">Total Data Sensor</span>
+            <span class="db-metric-val" id="metricTotalSensor">-</span>
+            <span class="db-metric-sub" id="metricAvgTemp">Rata-rata Suhu: -°C</span>
+          </div>
+        </div>
+
+        <!-- Moisture Card -->
+        <div class="db-metric-card">
+          <div class="db-metric-icon emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+            </svg>
+          </div>
+          <div class="db-metric-info">
+            <span class="db-metric-label">Rata-rata Kelembapan</span>
+            <span class="db-metric-val" id="metricAvgMoisture">-%</span>
+            <span class="db-metric-sub" id="metricMoistureRange">Rentang: -% s/d -%</span>
+          </div>
+        </div>
+
+        <!-- pH Card -->
+        <div class="db-metric-card">
+          <div class="db-metric-icon violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 2v7.31L4.14 19.4A2 2 0 0 0 5.86 22h12.28a2 2 0 0 0 1.72-2.6L14 9.31V2"></path>
+              <line x1="8" y1="2" x2="16" y2="2"></line>
+            </svg>
+          </div>
+          <div class="db-metric-info">
+            <span class="db-metric-label">Rata-rata pH Tanah</span>
+            <span class="db-metric-val" id="metricAvgPh">-</span>
+            <span class="db-metric-sub" id="metricPhStatus">Status: Netral Seimbang</span>
+          </div>
+        </div>
+
+        <!-- Water Watering Card -->
+        <div class="db-metric-card">
+          <div class="db-metric-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v6m0 0a4 4 0 0 1 4 4v8a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-8a4 4 0 0 1 4-4z"></path>
+            </svg>
+          </div>
+          <div class="db-metric-info">
+            <span class="db-metric-label">Penyiraman Air</span>
+            <span class="db-metric-val" id="metricTotalWaterCount">- <small>kali</small></span>
+            <span class="db-metric-sub" id="metricTotalWaterVol">Volume: - Liter</span>
+          </div>
+        </div>
+
+        <!-- Fertilizer Card -->
+        <div class="db-metric-card">
+          <div class="db-metric-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="db-metric-info">
+            <span class="db-metric-label">Fertigasi Pupuk</span>
+            <span class="db-metric-val" id="metricTotalPupukCount">- <small>kali</small></span>
+            <span class="db-metric-sub" id="metricTotalPupukVol">Dosis: - ml</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAVIGATION TABS -->
+      <div class="db-tabs-bar">
+        <button class="db-tab-btn active" data-tab="sensor" id="tabBtnSensor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+          <span>Database Telemetri Sensor</span>
+          <span class="db-tab-count" id="badgeTabSensor">0</span>
+        </button>
+
+        <button class="db-tab-btn" data-tab="watering" id="tabBtnWatering">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+          </svg>
+          <span>Database Riwayat Penyiraman</span>
+          <span class="db-tab-count" id="badgeTabWatering">0</span>
+        </button>
+
+        <button class="db-tab-btn" data-tab="chart" id="tabBtnChart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Analisis Grafik Historis</span>
+        </button>
+      </div>
+
+      <!-- ==========================================
+           TAB 1: DATABASE SENSOR
+           ========================================== -->
+      <div class="tab-content" id="tabContentSensor">
+        <!-- Filter Bar -->
+        <div class="db-filter-card">
+          <div class="db-filter-inputs">
+            <!-- Search -->
+            <div class="db-search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="sensorSearchInput" class="db-input" placeholder="Cari sumber / waktu...">
+            </div>
+
+            <!-- Time Preset -->
+            <select id="sensorTimeRange" class="db-select" title="Rentang Waktu">
+              <option value="ALL">Semua Waktu</option>
+              <option value="24H">24 Jam Terakhir</option>
+              <option value="TODAY">Hari Ini Saja</option>
+              <option value="7D">7 Hari Terakhir</option>
+            </select>
+
+            <!-- Items per page -->
+            <select id="sensorPageLimit" class="db-select" title="Jumlah Baris Per Halaman">
+              <option value="15">15 baris / hal</option>
+              <option value="30" selected>30 baris / hal</option>
+              <option value="50">50 baris / hal</option>
+              <option value="100">100 baris / hal</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="db-filter-buttons">
+            <button id="btnRefreshSensor" class="btn-db btn-db-outline" title="Segarkan tabel sensor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Refresh</span>
+            </button>
+            <a href="/api/database/export/sensor" id="btnExportSensorCsv" class="btn-db btn-db-outline" title="Unduh data sensor format CSV Excel" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export CSV</span>
+            </a>
+            <button id="btnExportSensorJson" class="btn-db btn-db-outline" title="Unduh data sensor JSON">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              <span>JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sensor Table -->
+        <div class="db-table-card">
+          <div class="table-responsive">
+            <table class="modern-table" id="sensorTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th>Waktu Pencatatan</th>
+                  <th>Suhu Lingkungan</th>
+                  <th>Kelembapan Tanah</th>
+                  <th>pH Tanah</th>
+                  <th>Pompa Air</th>
+                  <th>Pompa Pupuk</th>
+                  <th>Sumber Data</th>
+                </tr>
+              </thead>
+              <tbody id="sensorTableBody">
+                <!-- Diisi secara dinamis via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="db-pagination-bar">
+            <div class="db-pagination-info" id="sensorPaginationInfo">
+              Menampilkan 0 - 0 dari 0 data
+            </div>
+            <div class="db-pagination-controls" id="sensorPaginationControls">
+              <!-- Tombol pagination -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           TAB 2: DATABASE RIWAYAT PENYIRAMAN
+           ========================================== -->
+      <div class="tab-content hidden" id="tabContentWatering">
+        <!-- Filter Bar -->
+        <div class="db-filter-card">
+          <div class="db-filter-inputs">
+            <!-- Search -->
+            <div class="db-search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="wateringSearchInput" class="db-input" placeholder="Cari keterangan / mode...">
+            </div>
+
+            <!-- Tipe Penyiraman -->
+            <select id="wateringFilterType" class="db-select" title="Filter Jenis">
+              <option value="ALL">Semua Jenis (Air & Pupuk)</option>
+              <option value="AIR">💧 Siram Air Saja</option>
+              <option value="PUPUK">🌿 Fertigasi Pupuk Saja</option>
+            </select>
+
+            <!-- Mode -->
+            <select id="wateringFilterMode" class="db-select" title="Filter Mode">
+              <option value="ALL">Semua Mode (Auto & Manual)</option>
+              <option value="AUTO">🤖 Mode AUTO</option>
+              <option value="MANUAL">🖐️ Mode MANUAL</option>
+            </select>
+
+            <!-- Items per page -->
+            <select id="wateringPageLimit" class="db-select" title="Jumlah Baris Per Halaman">
+              <option value="15">15 baris / hal</option>
+              <option value="30" selected>30 baris / hal</option>
+              <option value="50">50 baris / hal</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="db-filter-buttons">
+            <button id="btnRefreshWatering" class="btn-db btn-db-outline" title="Segarkan tabel penyiraman">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Refresh</span>
+            </button>
+            <a href="/api/database/export/watering" id="btnExportWateringCsv" class="btn-db btn-db-outline" title="Unduh riwayat penyiraman CSV" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export CSV</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Watering Table -->
+        <div class="db-table-card">
+          <div class="table-responsive">
+            <table class="modern-table" id="wateringTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th>Waktu Aktivitas</th>
+                  <th>Jenis Operasi</th>
+                  <th>Mode Kontrol</th>
+                  <th>Durasi</th>
+                  <th>Estimasi Volume</th>
+                  <th>Efek Kelembapan Tanah</th>
+                  <th>Keterangan / Pemicu Sistem</th>
+                </tr>
+              </thead>
+              <tbody id="wateringTableBody">
+                <!-- Diisi via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="db-pagination-bar">
+            <div class="db-pagination-info" id="wateringPaginationInfo">
+              Menampilkan 0 - 0 dari 0 data
+            </div>
+            <div class="db-pagination-controls" id="wateringPaginationControls">
+              <!-- Tombol pagination -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           TAB 3: ANALISIS GRAFIK HISTORIS
+           ========================================== -->
+      <div class="tab-content hidden" id="tabContentChart">
+        <div class="db-chart-section">
+          <!-- Sensor Trend Chart -->
+          <div class="db-chart-card">
+            <div class="db-chart-header">
+              <h3 class="db-chart-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" style="width: 20px; height: 20px;">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Tren Historis Suhu & Kelembapan Tanah
+              </h3>
+              <div class="db-filter-buttons">
+                <button class="btn-db btn-db-outline chart-range-btn active" data-limit="30">30 Terakhir</button>
+                <button class="btn-db btn-db-outline chart-range-btn" data-limit="60">60 Terakhir</button>
+                <button class="btn-db btn-db-outline chart-range-btn" data-limit="100">100 Terakhir</button>
+              </div>
+            </div>
+            <div class="db-chart-canvas-wrap">
+              <canvas id="dbSensorTrendChart"></canvas>
+            </div>
+          </div>
+
+          <!-- pH History Chart -->
+          <div class="db-chart-card">
+            <div class="db-chart-header">
+              <h3 class="db-chart-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" style="width: 20px; height: 20px;">
+                  <path d="M10 2v7.31L4.14 19.4A2 2 0 0 0 5.86 22h12.28a2 2 0 0 0 1.72-2.6L14 9.31V2"></path>
+                  <line x1="8" y1="2" x2="16" y2="2"></line>
+                </svg>
+                Tren Historis Derajat Keasaman pH Tanah
+              </h3>
+            </div>
+            <div class="db-chart-canvas-wrap">
+              <canvas id="dbPhTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p class="footer-text">
+          AquaSmart IoT &copy; 2026 &mdash; Database SQLite Persisten & Arsip Riwayat Otomatis.
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL KONFIRMASI BERSIHKAN DATA -->
+  <div class="db-modal-overlay" id="clearModal">
+    <div class="db-modal">
+      <h3 class="db-modal-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="width: 22px; height: 22px;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Konfirmasi Bersihkan Data
+      </h3>
+      <p class="db-modal-body">
+        Pilih bagian arsip database yang ingin Anda bersihkan secara permanen:
+      </p>
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff;">
+          Target Pembersihan:
+        </label>
+        <select id="clearTargetSelect" class="db-select" style="width: 100%;">
+          <option value="sensor">Hanya Data Telemetri Sensor</option>
+          <option value="watering">Hanya Data Riwayat Penyiraman</option>
+          <option value="all">Bersihkan Keseluruhan Database (Semua Data)</option>
+        </select>
+      </div>
+      <div class="db-modal-actions">
+        <button id="btnCancelClear" class="btn-db btn-db-outline">Batal</button>
+        <button id="btnConfirmClear" class="btn-db btn-db-danger">Bersihkan Sekarang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js Offline Bundle & Database Controller -->
+  <script src="js/chart.min.js"></script>
+  <script src="js/database.js"></script>
+</body>
+</html>
