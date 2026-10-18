@@ -99,6 +99,17 @@
             </p>
           </div>
           <div class="db-header-actions">
+            <span id="autoRefreshCountdown" class="auto-refresh-badge" title="Data akan di-refresh otomatis setiap 30 menit">
+              ⏱ Auto-refresh dalam --:--
+            </span>
+            <button id="btnDownloadAllCsv" class="btn-db btn-db-success" title="Unduh seluruh database sebagai file CSV">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Unduh Semua CSV</span>
+            </button>
             <button id="btnOpenClearModal" class="btn-db btn-db-danger" title="Bersihkan riwayat database">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -209,15 +220,6 @@
           <span>Database Riwayat Penyiraman</span>
           <span class="db-tab-count" id="badgeTabWatering">0</span>
         </button>
-
-        <button class="db-tab-btn" data-tab="chart" id="tabBtnChart">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
-          <span>Analisis Grafik Historis</span>
-        </button>
       </div>
 
       <!-- ==========================================
@@ -263,20 +265,13 @@
               </svg>
               <span>Refresh</span>
             </button>
-            <a href="/api/database/export/sensor" id="btnExportSensorCsv" class="btn-db btn-db-outline" title="Unduh data sensor format CSV Excel" download>
+            <button id="btnDownloadSensorCsv" class="btn-db btn-db-success" title="Unduh data sensor sebagai file CSV">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Export CSV</span>
-            </a>
-            <button id="btnExportSensorJson" class="btn-db btn-db-outline" title="Unduh data sensor JSON">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
-              <span>JSON</span>
+              <span>Unduh CSV</span>
             </button>
           </div>
         </div>
@@ -363,14 +358,14 @@
               </svg>
               <span>Refresh</span>
             </button>
-            <a href="/api/database/export/watering" id="btnExportWateringCsv" class="btn-db btn-db-outline" title="Unduh riwayat penyiraman CSV" download>
+            <button id="btnDownloadWateringCsv" class="btn-db btn-db-success" title="Unduh riwayat penyiraman sebagai file CSV">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Export CSV</span>
-            </a>
+              <span>Unduh CSV</span>
+            </button>
           </div>
         </div>
 
@@ -408,48 +403,6 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           TAB 3: ANALISIS GRAFIK HISTORIS
-           ========================================== -->
-      <div class="tab-content hidden" id="tabContentChart">
-        <div class="db-chart-section">
-          <!-- Sensor Trend Chart -->
-          <div class="db-chart-card">
-            <div class="db-chart-header">
-              <h3 class="db-chart-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" style="width: 20px; height: 20px;">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-                Tren Historis Suhu & Kelembapan Tanah
-              </h3>
-              <div class="db-filter-buttons">
-                <button class="btn-db btn-db-outline chart-range-btn active" data-limit="30">30 Terakhir</button>
-                <button class="btn-db btn-db-outline chart-range-btn" data-limit="60">60 Terakhir</button>
-                <button class="btn-db btn-db-outline chart-range-btn" data-limit="100">100 Terakhir</button>
-              </div>
-            </div>
-            <div class="db-chart-canvas-wrap">
-              <canvas id="dbSensorTrendChart"></canvas>
-            </div>
-          </div>
-
-          <!-- pH History Chart -->
-          <div class="db-chart-card">
-            <div class="db-chart-header">
-              <h3 class="db-chart-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" style="width: 20px; height: 20px;">
-                  <path d="M10 2v7.31L4.14 19.4A2 2 0 0 0 5.86 22h12.28a2 2 0 0 0 1.72-2.6L14 9.31V2"></path>
-                  <line x1="8" y1="2" x2="16" y2="2"></line>
-                </svg>
-                Tren Historis Derajat Keasaman pH Tanah
-              </h3>
-            </div>
-            <div class="db-chart-canvas-wrap">
-              <canvas id="dbPhTrendChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
 
     </main>
 
@@ -494,8 +447,7 @@
     </div>
   </div>
 
-  <!-- Chart.js Offline Bundle & Database Controller -->
-  <script src="js/chart.min.js"></script>
+  <!-- Database Controller (No Chart.js needed) -->
   <script src="js/database.js"></script>
 </body>
 </html>

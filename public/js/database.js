@@ -1,6 +1,7 @@
 /**
  * AquaSmart IoT - Database & History Controller
- * Handles live queries, pagination, filtering, CSV/JSON export, and Chart.js analytics.
+ * Handles live queries, pagination, filtering, and CSV export.
+ * Auto-refresh setiap 30 menit untuk sinkronisasi data terbaru.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,13 +26,43 @@ document.addEventListener('DOMContentLoaded', () => {
       mode: 'ALL',
       total: 0,
       totalPages: 1
-    },
-    chart: {
-      limit: 30,
-      sensorChart: null,
-      phChart: null
     }
   };
+
+  // ==========================================
+  // AUTO-REFRESH COUNTDOWN TIMER (30 MENIT)
+  // ==========================================
+  const AUTO_REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 menit
+  let nextRefreshAt = Date.now() + AUTO_REFRESH_INTERVAL_MS;
+
+  function updateCountdownDisplay() {
+    const remaining = Math.max(0, nextRefreshAt - Date.now());
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('autoRefreshCountdown');
+    if (el) {
+      el.textContent = `Auto-refresh dalam ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+  }
+
+  function triggerAutoRefresh() {
+    nextRefreshAt = Date.now() + AUTO_REFRESH_INTERVAL_MS;
+    fetchSummary();
+    if (state.activeTab === 'sensor') loadSensorData(state.sensor.page);
+    else if (state.activeTab === 'watering') loadWateringData(state.watering.page);
+    const el = document.getElementById('autoRefreshCountdown');
+    if (el) {
+      el.classList.add('refresh-flash');
+      setTimeout(() => el.classList.remove('refresh-flash'), 800);
+    }
+  }
+
+  // Update countdown setiap detik
+  setInterval(updateCountdownDisplay, 1000);
+  updateCountdownDisplay();
+
+  // Jalankan auto-refresh setiap 30 menit
+  setInterval(triggerAutoRefresh, AUTO_REFRESH_INTERVAL_MS);
 
   // ==========================================
   // REAL-TIME CLOCK
@@ -399,157 +430,40 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ==========================================
-  // TAB 3: CHARTS HISTORIS
+  // CSV DOWNLOAD HELPERS
   // ==========================================
-  async function loadCharts() {
-    try {
-      const res = await fetch(`/api/database/chart?limit=${state.chart.limit}`);
-      const result = await res.json();
-      if (!result.success || !result.data) return;
-
-      const points = result.data;
-      const labels = points.map(p => {
-        const d = new Date(p.timestamp);
-        return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      });
-
-      const tempVals = points.map(p => p.suhu);
-      const moistureVals = points.map(p => p.kelembapan);
-      const phVals = points.map(p => p.ph);
-
-      // 1. Chart Suhu & Kelembapan
-      const ctxSensor = document.getElementById('dbSensorTrendChart');
-      if (ctxSensor) {
-        if (state.chart.sensorChart) {
-          state.chart.sensorChart.destroy();
-        }
-
-        state.chart.sensorChart = new Chart(ctxSensor, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Kelembapan Tanah (%)',
-                data: moistureVals,
-                borderColor: '#06b6d4',
-                backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                fill: true,
-                tension: 0.35,
-                borderWidth: 2.5,
-                yAxisID: 'yMoisture',
-                pointRadius: 2.5,
-                pointHoverRadius: 6
-              },
-              {
-                label: 'Suhu Lingkungan (°C)',
-                data: tempVals,
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                fill: true,
-                tension: 0.35,
-                borderWidth: 2.5,
-                yAxisID: 'yTemp',
-                pointRadius: 2.5,
-                pointHoverRadius: 6
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-              mode: 'index',
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 } }
-              }
-            },
-            scales: {
-              x: {
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#64748b' }
-              },
-              yMoisture: {
-                type: 'linear',
-                position: 'left',
-                min: 0,
-                max: 100,
-                title: { display: true, text: 'Kelembapan (%)', color: '#06b6d4' },
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#06b6d4' }
-              },
-              yTemp: {
-                type: 'linear',
-                position: 'right',
-                min: 15,
-                max: 45,
-                title: { display: true, text: 'Suhu (°C)', color: '#f59e0b' },
-                grid: { drawOnChartArea: false },
-                ticks: { color: '#f59e0b' }
-              }
-            }
-          }
-        });
-      }
-
-      // 2. Chart pH Tanah
-      const ctxPh = document.getElementById('dbPhTrendChart');
-      if (ctxPh) {
-        if (state.chart.phChart) {
-          state.chart.phChart.destroy();
-        }
-
-        state.chart.phChart = new Chart(ctxPh, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Derajat Keasaman pH Tanah',
-                data: phVals,
-                borderColor: '#8b5cf6',
-                backgroundColor: 'rgba(139, 92, 246, 0.15)',
-                fill: true,
-                tension: 0.35,
-                borderWidth: 2.5,
-                pointRadius: 2.5,
-                pointHoverRadius: 6
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 } }
-              }
-            },
-            scales: {
-              x: {
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#64748b' }
-              },
-              y: {
-                min: 4,
-                max: 10,
-                title: { display: true, text: 'Nilai pH', color: '#8b5cf6' },
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#8b5cf6' }
-              }
-            }
-          }
-        });
-      }
-
-    } catch (err) {
-      console.error('Error loading charts:', err);
+  function downloadCSV(type, label) {
+    const btn = document.getElementById(type === 'sensor' ? 'btnDownloadSensorCsv' : 'btnDownloadWateringCsv');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '<span style="opacity:0.7">Mengunduh...</span>';
+      btn.disabled = true;
     }
+
+    fetch(`/api/database/export/${type}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Server error: ' + res.status);
+        return res.blob();
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aquasmart_${type}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch(err => {
+        alert('Gagal mengunduh CSV: ' + err.message);
+      })
+      .finally(() => {
+        if (btn) {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      });
   }
 
   // ==========================================
@@ -558,8 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabBtns = document.querySelectorAll('.db-tab-btn');
   const tabContents = {
     sensor: document.getElementById('tabContentSensor'),
-    watering: document.getElementById('tabContentWatering'),
-    chart: document.getElementById('tabContentChart')
+    watering: document.getElementById('tabContentWatering')
   };
 
   tabBtns.forEach(btn => {
@@ -585,8 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSensorData(state.sensor.page);
       } else if (targetTab === 'watering') {
         loadWateringData(state.watering.page);
-      } else if (targetTab === 'chart') {
-        loadCharts();
       }
     });
   });
@@ -619,21 +530,21 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSummary();
   });
 
-  // JSON Export for Sensor
-  document.getElementById('btnExportSensorJson')?.addEventListener('click', async () => {
-    try {
-      const res = await fetch('/api/database/sensor?limit=1000');
-      const data = await res.json();
-      const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `aquasmart_sensor_records_${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('Gagal mengekspor data JSON: ' + err.message);
-    }
+  // Tombol Unduh CSV - Data Sensor
+  document.getElementById('btnDownloadSensorCsv')?.addEventListener('click', () => {
+    downloadCSV('sensor', 'Sensor Telemetri');
+  });
+
+  // Tombol Unduh CSV - Riwayat Penyiraman
+  document.getElementById('btnDownloadWateringCsv')?.addEventListener('click', () => {
+    downloadCSV('watering', 'Riwayat Penyiraman');
+  });
+
+  // Tombol Unduh CSV - Seluruh Database (kedua tabel sekaligus)
+  document.getElementById('btnDownloadAllCsv')?.addEventListener('click', () => {
+    // Unduh sensor dulu, lalu pupuk dengan jeda singkat
+    downloadCSV('sensor', 'Sensor');
+    setTimeout(() => downloadCSV('watering', 'Penyiraman'), 800);
   });
 
   // ==========================================
@@ -669,24 +580,14 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSummary();
   });
 
-  // ==========================================
-  // CHART RANGE BUTTONS
-  // ==========================================
-  document.querySelectorAll('.chart-range-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.chart.limit = parseInt(btn.getAttribute('data-limit'));
-      loadCharts();
-    });
-  });
+  // (Grafik historis telah dihapus sesuai permintaan)
 
   // Global Refresh Button
   document.getElementById('btnGlobalRefresh')?.addEventListener('click', () => {
+    nextRefreshAt = Date.now() + AUTO_REFRESH_INTERVAL_MS;
     fetchSummary();
     if (state.activeTab === 'sensor') loadSensorData(state.sensor.page);
     else if (state.activeTab === 'watering') loadWateringData(state.watering.page);
-    else if (state.activeTab === 'chart') loadCharts();
   });
 
   // ==========================================
@@ -769,4 +670,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   fetchSummary();
   loadSensorData(1);
+  loadWateringData(1);
 });

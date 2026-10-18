@@ -67,18 +67,20 @@ Pastikan **Node.js** telah terpasang di komputer Anda.
 ## 📡 Integrasi Hardware ESP32
 
 ### Skema Pinout:
-| Komponen | Tipe | Pin ESP32 |
-| :--- | :--- | :--- |
-| **DHT22 / DHT11** (Suhu Udara & Lingkungan) | Digital | `GPIO 4` |
-| **Capacitive Soil Moisture Sensor v1.2** | Analog ADC | `GPIO 34` |
-| **PH-4502C Sensor pH Tanah** | Analog ADC | `GPIO 35` |
-| **Relay 1** (Pompa Penyiraman Air) | Digital Output | `GPIO 26` |
-| **Relay 2** (Pompa Pupuk Cair) | Digital Output | `GPIO 27` |
+| Komponen | Tipe | Pin ESP32 | Keterangan |
+| :--- | :--- | :--- | :--- |
+| **DHT22** (Suhu & Kelembapan Udara) | Digital Data | `GPIO 16` | Pin data DHT22 (resistor pull-up 4.7k-10k) |
+| **Capacitive Soil Moisture Sensor v1.2** | Analog ADC | `GPIO 35` | Pembacaan kelembapan tanah (ADC1_CH7) |
+| **Sensor pH Analog (PH-4502C / sejenis)** | Analog ADC | `GPIO 34` | Pembacaan tegangan analog pH (ADC1_CH6) |
+| **Sensor pH Digital (DO)** | Digital Input | `GPIO 13` | Digital threshold / alarm pH |
+| **Relay 1** (Pompa Penyiraman Air) | Digital Output | `GPIO 26` | Kendali katup/pompa siram utama |
+| **Relay 2** (Pompa Pupuk Cair NPK) | Digital Output | `GPIO 27` | Kendali fertigasi nutrisi cair |
 
 ### Endpoint API untuk ESP32:
 - **Kirim Telemetri & Dapatkan Perintah Relay**:
   - **Method**: `POST`
-  - **URL**: `http://<IP_KOMPUTER>:3000/api/telemetry`
+  - **URL Cloud (Render)**: `https://aquasmart-iot.onrender.com/api/telemetry`
+  - **URL Lokal**: `http://<IP_KOMPUTER>:3000/api/telemetry`
   - **Header**: `Content-Type: application/json`
   - **Payload Body**:
     ```json

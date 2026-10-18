@@ -745,19 +745,24 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>DHT22 / DHT11</strong> (Suhu & Kelembapan Udara)</td>
+                    <td><strong>DHT22</strong> (Suhu & Kelembapan Udara)</td>
                     <td>Digital Data</td>
-                    <td><span class="pin-badge">GPIO 4</span></td>
+                    <td><span class="pin-badge">GPIO 16</span></td>
                   </tr>
                   <tr>
                     <td><strong>Capacitive Soil Moisture</strong> (Kelembapan Tanah)</td>
                     <td>Analog ADC</td>
+                    <td><span class="pin-badge">GPIO 35 (ADC1_CH7)</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Sensor pH Analog</strong> (Derajat Keasaman)</td>
+                    <td>Analog ADC</td>
                     <td><span class="pin-badge">GPIO 34 (ADC1_CH6)</span></td>
                   </tr>
                   <tr>
-                    <td><strong>PH-4502C Sensor</strong> (pH Tanah)</td>
-                    <td>Analog ADC</td>
-                    <td><span class="pin-badge">GPIO 35 (ADC1_CH7)</span></td>
+                    <td><strong>Sensor pH Digital</strong> (DO / Trigger pH)</td>
+                    <td>Digital Input</td>
+                    <td><span class="pin-badge">GPIO 13</span></td>
                   </tr>
                   <tr>
                     <td><strong>Relay 1</strong> (Pompa Penyiraman Air)</td>
@@ -777,7 +782,7 @@
             <div class="api-endpoint-box">
               <div class="endpoint-line">
                 <span class="method post">POST</span>
-                <span class="url">http://&lt;IP_KOMPUTER_ANDA&gt;:3000/api/telemetry</span>
+                <span class="url">https://aquasmart-iot.onrender.com/api/telemetry</span>
               </div>
               <p class="endpoint-desc">Format Payload JSON yang dikirim ESP32:</p>
               <pre class="code-snippet"><code>{
@@ -806,92 +811,53 @@
             <button class="btn-copy-code" id="btnCopyInoCode">Salin Kode</button>
           </div>
           <pre class="code-block-large"><code id="inoCodeBlock">/*
-  AquaSmart IoT - ESP32 Automatic Irrigation & Monitoring
-  Library yang diperlukan:
-  - WiFi.h
-  - HTTPClient.h
-  - ArduinoJson.h
-  - DHT.h
+  🌱 AquaSmart IoT - ESP32 Fuzzy Tsukamoto Smart Irrigation
+  Kode firmware lengkap tersedia di: esp32_firmware/esp32_penyiraman.ino
+
+  Pinout:
+  - DHT22 (Suhu &amp; Kelembapan Udara) : GPIO 16
+  - Soil Moisture (Analog ADC)       : GPIO 35
+  - pH Sensor (Analog ADC)          : GPIO 34
+  - pH Sensor (Digital Input DO)    : GPIO 13
+  - Relay 1 (Pompa Air)             : GPIO 26
+  - Relay 2 (Pompa Pupuk Cair)      : GPIO 27
+
+  Library:
+  - WiFi.h &amp; HTTPClient.h (ESP32 Core)
+  - ArduinoJson.h (v6.x)
+  - DHT.h (Adafruit)
 */
 
 #include &lt;WiFi.h&gt;
 #include &lt;HTTPClient.h&gt;
 #include &lt;ArduinoJson.h&gt;
-#include "DHT.h"
+#include &lt;DHT.h&gt;
 
-// 1. Konfigurasi WiFi & Server
-const char* ssid = "NAMA_WIFI_ANDA";
-const char* password = "PASSWORD_WIFI";
-const char* serverUrl = "http://192.168.1.100:3000/api/telemetry"; // Ganti dengan IP PC Dashboard
+const char* WIFI_SSID     = "NAMA_WIFI_ANDA";
+const char* WIFI_PASSWORD = "PASSWORD_WIFI_ANDA";
+const char* SERVER_URL    = "https://aquasmart-iot.onrender.com/api/telemetry";
 
-// 2. Definisi Pin
-#define DHTPIN 4
-#define DHTTYPE DHT22
-#define SOIL_PIN 34
-#define PH_PIN 35
-#define RELAY_AIR 26
-#define RELAY_PUPUK 27
+#define PH_ANALOG_PIN  34
+#define PH_DIGITAL_PIN 13
+#define SOIL_PIN       35
+#define DHT_PIN        16
+#define RELAY1_PIN     26
+#define RELAY2_PIN     27
+#define DHT_TYPE       DHT22
 
-DHT dht(DHTPIN, DHTTYPE);
+#define RELAY_ON  HIGH
+#define RELAY_OFF LOW
 
-void setup() {
-  Serial.begin(115200);
-  pinMode(RELAY_AIR, OUTPUT);
-  pinMode(RELAY_PUPUK, OUTPUT);
-  digitalWrite(RELAY_AIR, HIGH);   // Relay Active LOW (Mati)
-  digitalWrite(RELAY_PUPUK, HIGH);
+DHT dht(DHT_PIN, DHT_TYPE);
 
-  dht.begin();
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi Terhubung!");
-}
+// Kalibrasi Sensor Kelembapan &amp; pH
+const int SOIL_ADC_DRY = 3500;
+const int SOIL_ADC_WET = 1500;
+const float MAX_AIR_SEC = 30.0;
+const float MAX_PUPUK_SEC = 5.0;
 
-void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    // Baca sensor
-    float suhu = dht.readTemperature();
-    int soilRaw = analogRead(SOIL_PIN);
-    float kelembapan = map(soilRaw, 3200, 1400, 0, 100); // Kalibrasi tanah kering vs basah
-    kelembapan = constrain(kelembapan, 0, 100);
-
-    int phRaw = analogRead(PH_PIN);
-    float ph = 7.0 + ((2048 - phRaw) * 0.0035); // Rumus kalibrasi tegangan ke pH
-
-    // Buat JSON
-    StaticJsonDocument<200> doc;
-    doc["suhu"] = isnan(suhu) ? 28.0 : suhu;
-    doc["kelembapan"] = kelembapan;
-    doc["ph"] = ph;
-    doc["deviceId"] = "ESP32-Greenhouse-1";
-
-    String requestBody;
-    serializeJson(doc, requestBody);
-
-    HTTPClient http;
-    http.begin(serverUrl);
-    http.addHeader("Content-Type", "application/json");
-
-    int httpResponseCode = http.POST(requestBody);
-    if (httpResponseCode > 0) {
-      String response = http.getString();
-      StaticJsonDocument<300> resDoc;
-      deserializeJson(resDoc, response);
-
-      // Kontrol Relay Fisik dari feedback dashboard
-      bool pompaAir = resDoc["controls"]["pompaAir"];
-      bool pompaPupuk = resDoc["controls"]["pompaPupuk"];
-
-      digitalWrite(RELAY_AIR, pompaAir ? LOW : HIGH);
-      digitalWrite(RELAY_PUPUK, pompaPupuk ? LOW : HIGH);
-    }
-    http.end();
-  }
-  delay(3000); // Interval pengiriman data tiap 3 detik
-}</code></pre>
+// Logika Fuzzy Tsukamoto &amp; Siklus Non-Blocking
+// Buka file esp32_firmware/esp32_penyiraman.ino untuk kode lengkapnya!</code></pre>
         </div>
 
       </div>

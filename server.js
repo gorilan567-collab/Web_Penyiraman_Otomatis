@@ -340,7 +340,7 @@ app.get('/api/status', (req, res) => {
 
 // 2. Endpoint telemetry untuk ESP32 / IoT Hardware sungguhan
 app.post('/api/telemetry', (req, res) => {
-  const { suhu, kelembapan, ph, deviceId } = req.body;
+  const { suhu, kelembapan, ph, deviceId, pompaAir, pompaPupuk, durasiAir, durasiPupuk, modeFuzzy } = req.body;
 
   if (suhu !== undefined) systemState.telemetry.suhu = Number(parseFloat(suhu).toFixed(1));
   if (kelembapan !== undefined) systemState.telemetry.kelembapan = Number(parseFloat(kelembapan).toFixed(1));
@@ -348,9 +348,42 @@ app.post('/api/telemetry', (req, res) => {
 
   systemState.telemetry.timestamp = new Date().toISOString();
   systemState.statusPerangkat.online = true;
-  systemState.statusPerangkat.tipe = deviceId ? `ESP32 (${deviceId})` : 'Perangkat IoT Terhubung';
+  systemState.statusPerangkat.tipe = deviceId ? `ESP32 (${deviceId})${modeFuzzy ? ` [${modeFuzzy}]` : ''}` : 'Perangkat IoT Terhubung';
   systemState.statusPerangkat.terakhirSinkron = new Date().toLocaleTimeString('id-ID');
   systemState.statusPerangkat.ipKlien = req.ip || req.socket.remoteAddress;
+
+  // Nonaktifkan simulator jika hardware riil mulai mengirim data
+  if (systemState.settings.simulationActive) {
+    systemState.settings.simulationActive = false;
+    addLog('HARDWARE', `Perangkat IoT fisik (${systemState.statusPerangkat.tipe}) terdeteksi. Simulasi dinonaktifkan.`, 'success');
+  }
+
+  // Sinkronisasi status riil pompa dari ESP32 saat Mode AUTO
+  if (systemState.controls.mode === 'auto') {
+    if (pompaAir !== undefined) {
+      const isAirOn = Boolean(pompaAir);
+      if (isAirOn && !systemState.controls.pompaAir) {
+        onWateringStarted('auto', durasiAir);
+        addLog('FUZZY', `Pompa air AKTIF oleh ESP32 (Fuzzy: ${durasiAir || 0} detik).`, 'success');
+      } else if (!isAirOn && systemState.controls.pompaAir) {
+        onWateringStopped('Siklus pompa air Fuzzy selesai.');
+        addLog('FUZZY', 'Pompa air MATI (Fuzzy selesai).', 'info');
+      }
+      systemState.controls.pompaAir = isAirOn;
+    }
+
+    if (pompaPupuk !== undefined) {
+      const isPupukOn = Boolean(pompaPupuk);
+      if (isPupukOn && !systemState.controls.pompaPupuk) {
+        onPupukStarted('auto', durasiPupuk);
+        addLog('FUZZY', `Pompa pupuk AKTIF oleh ESP32 (Fuzzy: ${durasiPupuk || 0} detik).`, 'success');
+      } else if (!isPupukOn && systemState.controls.pompaPupuk) {
+        onPupukStopped('Siklus pompa pupuk Fuzzy selesai.');
+        addLog('FUZZY', 'Pompa pupuk MATI (Fuzzy selesai).', 'info');
+      }
+      systemState.controls.pompaPupuk = isPupukOn;
+    }
+  }
 
   // Catat langsung ke database SQLite dari perangkat fisik
   db.logSensorData({
@@ -361,12 +394,6 @@ app.post('/api/telemetry', (req, res) => {
     pompaPupuk: systemState.controls.pompaPupuk,
     source: deviceId ? `ESP32 (${deviceId})` : 'ESP32'
   });
-
-  // Nonaktifkan simulator jika hardware riil mulai mengirim data
-  if (systemState.settings.simulationActive) {
-    systemState.settings.simulationActive = false;
-    addLog('HARDWARE', `Perangkat IoT fisik (${systemState.statusPerangkat.tipe}) terdeteksi. Simulasi dinonaktifkan.`, 'success');
-  }
 
   const timeFormatted = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const point = {
@@ -381,7 +408,10 @@ app.post('/api/telemetry', (req, res) => {
   historyData.push(point);
   if (historyData.length > 30) historyData.shift();
 
-  checkAutoRules();
+  // Evaluasi aturan server hanya jika simulasi masih aktif
+  if (systemState.settings.simulationActive) {
+    checkAutoRules();
+  }
 
   broadcast({
     type: 'TELEMETRY_UPDATE',
