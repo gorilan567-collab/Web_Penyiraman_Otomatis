@@ -30,23 +30,64 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ==========================================
-  // AUTO-REFRESH COUNTDOWN TIMER (30 MENIT)
+  // DATABASE INPUT INTERVAL & AUTO-SYNC TIMER
   // ==========================================
-  const AUTO_REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 menit
-  let nextRefreshAt = Date.now() + AUTO_REFRESH_INTERVAL_MS;
+  let dbIntervalMinutes = 10;
+  let nextDbLogTime = Date.now() + dbIntervalMinutes * 60 * 1000;
+  let nextRefreshAt = Date.now() + 60 * 1000; // Sinkron tampilan tiap 1 menit
+
+  async function fetchDbConfig() {
+    try {
+      const res = await fetch('/api/database/config');
+      const data = await res.json();
+      if (data.success) {
+        dbIntervalMinutes = data.databaseIntervalMenit || 10;
+        const select = document.getElementById('dbIntervalSelect');
+        if (select) select.value = String(dbIntervalMinutes);
+        if (data.nextDbLogTime) {
+          nextDbLogTime = data.nextDbLogTime;
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal memuat konfigurasi interval database:', e);
+    }
+  }
 
   function updateCountdownDisplay() {
-    const remaining = Math.max(0, nextRefreshAt - Date.now());
-    const mins = Math.floor(remaining / 60000);
-    const secs = Math.floor((remaining % 60000) / 1000);
-    const el = document.getElementById('autoRefreshCountdown');
-    if (el) {
-      el.textContent = `Auto-refresh dalam ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const now = Date.now();
+
+    // 1. Countdown Input Database
+    const remainingInput = Math.max(0, nextDbLogTime - now);
+    const inMins = Math.floor(remainingInput / 60000);
+    const inSecs = Math.floor((remainingInput % 60000) / 1000);
+    const inputBadge = document.getElementById('dbNextInputCountdown');
+    if (inputBadge) {
+      inputBadge.textContent = `⏱ Input berikutnya: ${String(inMins).padStart(2, '0')}:${String(inSecs).padStart(2, '0')}`;
+    }
+
+    if (remainingInput <= 0) {
+      nextDbLogTime = now + dbIntervalMinutes * 60000;
+      setTimeout(() => {
+        fetchSummary();
+        if (state.activeTab === 'sensor') loadSensorData(state.sensor.page);
+      }, 1500);
+    }
+
+    // 2. Countdown Sinkron Otomatis Tampilan
+    const remainingRefresh = Math.max(0, nextRefreshAt - now);
+    const refMins = Math.floor(remainingRefresh / 60000);
+    const refSecs = Math.floor((remainingRefresh % 60000) / 1000);
+    const refreshBadge = document.getElementById('autoRefreshCountdown');
+    if (refreshBadge) {
+      refreshBadge.textContent = `⏱ Sinkron otomatis dalam ${String(refMins).padStart(2, '0')}:${String(refSecs).padStart(2, '0')}`;
+    }
+    if (remainingRefresh <= 0) {
+      nextRefreshAt = now + 60 * 1000;
+      triggerAutoRefresh();
     }
   }
 
   function triggerAutoRefresh() {
-    nextRefreshAt = Date.now() + AUTO_REFRESH_INTERVAL_MS;
     fetchSummary();
     if (state.activeTab === 'sensor') loadSensorData(state.sensor.page);
     else if (state.activeTab === 'watering') loadWateringData(state.watering.page);
@@ -61,8 +102,66 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateCountdownDisplay, 1000);
   updateCountdownDisplay();
 
-  // Jalankan auto-refresh setiap 30 menit
-  setInterval(triggerAutoRefresh, AUTO_REFRESH_INTERVAL_MS);
+  // Event listener untuk pilihan interval input database
+  const dbIntervalSelect = document.getElementById('dbIntervalSelect');
+  if (dbIntervalSelect) {
+    dbIntervalSelect.addEventListener('change', async () => {
+      const selected = Number(dbIntervalSelect.value);
+      try {
+        const res = await fetch('/api/database/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ databaseIntervalMenit: selected })
+        });
+        const data = await res.json();
+        if (data.success) {
+          dbIntervalMinutes = selected;
+          nextDbLogTime = data.nextDbLogTime || (Date.now() + dbIntervalMinutes * 60000);
+          updateCountdownDisplay();
+          const badge = document.getElementById('dbNextInputCountdown');
+          if (badge) {
+            badge.classList.add('refresh-flash');
+            setTimeout(() => badge.classList.remove('refresh-flash'), 800);
+          }
+        }
+      } catch (err) {
+        console.error('Gagal memperbarui interval database:', err);
+      }
+    });
+  }
+
+  // Event listener tombol input manual data sekarang
+  const btnManualDbLog = document.getElementById('btnManualDbLog');
+  if (btnManualDbLog) {
+    btnManualDbLog.addEventListener('click', async () => {
+      const originalText = btnManualDbLog.innerHTML;
+      btnManualDbLog.disabled = true;
+      btnManualDbLog.innerHTML = '<span>Menyimpan...</span>';
+      try {
+        const res = await fetch('/api/database/input-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'Sensor Gateway' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          nextDbLogTime = data.nextDbLogTime || (Date.now() + dbIntervalMinutes * 60000);
+          fetchSummary();
+          loadSensorData(1);
+          const badge = document.getElementById('dbNextInputCountdown');
+          if (badge) {
+            badge.classList.add('refresh-flash');
+            setTimeout(() => badge.classList.remove('refresh-flash'), 800);
+          }
+        }
+      } catch (err) {
+        console.error('Gagal input manual database:', err);
+      } finally {
+        btnManualDbLog.disabled = false;
+        btnManualDbLog.innerHTML = originalText;
+      }
+    });
+  }
 
   // ==========================================
   // REAL-TIME CLOCK
@@ -233,8 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
             </td>
             <td>
-              <span class="badge-tag ${item.source === 'simulator' ? 'sim' : 'esp'}">
-                ${item.source === 'simulator' ? 'Simulasi' : item.source}
+              <span class="badge-tag esp">
+                ${item.source === 'simulator' ? 'Sensor Gateway' : item.source}
               </span>
             </td>
           </tr>
@@ -643,6 +742,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const wsUrl = `${protocol}//${window.location.host}`;
     const ws = new WebSocket(wsUrl);
 
+    ws.onopen = () => {
+      const label = document.getElementById('deviceStatusText');
+      const dot = document.querySelector('#deviceStatusPill .status-dot');
+      if (label) label.textContent = 'Gateway: Terhubung';
+      if (dot) dot.classList.add('online');
+    };
+
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
@@ -650,9 +756,17 @@ document.addEventListener('DOMContentLoaded', () => {
           fetchSummary();
           loadSensorData(state.sensor.page);
           loadWateringData(state.watering.page);
-        } else if (msg.type === 'CONTROLS_UPDATE') {
-          // If watering finishes, update summary and table
+        } else if (msg.type === 'CONTROLS_UPDATE' || msg.type === 'DATABASE_UPDATED') {
           fetchSummary();
+          if (state.activeTab === 'sensor') loadSensorData(state.sensor.page);
+          else if (state.activeTab === 'watering') loadWateringData(state.watering.page);
+        } else if (msg.type === 'SETTINGS_UPDATE') {
+          if (msg.settings && msg.settings.databaseIntervalMenit) {
+            dbIntervalMinutes = msg.settings.databaseIntervalMenit;
+            const select = document.getElementById('dbIntervalSelect');
+            if (select) select.value = String(dbIntervalMinutes);
+            if (msg.nextDbLogTime) nextDbLogTime = msg.nextDbLogTime;
+          }
         }
       } catch (e) {
         // ignore parse error
@@ -660,6 +774,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     ws.onclose = () => {
+      const label = document.getElementById('deviceStatusText');
+      const dot = document.querySelector('#deviceStatusPill .status-dot');
+      if (label) label.textContent = 'Gateway: Terputus';
+      if (dot) dot.classList.remove('online');
       setTimeout(initWebSocket, 4000);
     };
   }
@@ -668,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // INITIAL DATA LOAD
   // ==========================================
+  fetchDbConfig();
   fetchSummary();
   loadSensorData(1);
   loadWateringData(1);

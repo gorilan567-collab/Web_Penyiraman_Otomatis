@@ -69,7 +69,7 @@ function seedInitialDataIfEmpty() {
       const pompaAir = (kelembapan < 40) ? 1 : 0;
       const pompaPupuk = (i % 18 === 0) ? 1 : 0;
 
-      insertSensor.run(pastTime, suhu, kelembapan, ph, pompaAir, pompaPupuk, 'simulator');
+      insertSensor.run(pastTime, suhu, kelembapan, ph, pompaAir, pompaPupuk, 'Sensor Gateway');
     }
   }
 
@@ -151,8 +151,15 @@ function seedInitialDataIfEmpty() {
 
 seedInitialDataIfEmpty();
 
+// Migrasi data lama dari 'simulator' ke 'Sensor Gateway'
+try {
+  db.exec("UPDATE sensor_logs SET source = 'Sensor Gateway' WHERE source = 'simulator';");
+} catch (migErr) {
+  // abaikan jika tidak ada tabel atau kolom
+}
+
 // Insert a single sensor log
-function logSensorData({ suhu, kelembapan, ph, pompaAir, pompaPupuk, source = 'simulator' }) {
+function logSensorData({ suhu, kelembapan, ph, pompaAir, pompaPupuk, source = 'Sensor Gateway' }) {
   try {
     const stmt = db.prepare(`
       INSERT INTO sensor_logs (timestamp, suhu, kelembapan, ph, pompa_air, pompa_pupuk, source)

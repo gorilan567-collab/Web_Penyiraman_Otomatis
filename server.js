@@ -38,13 +38,14 @@ let systemState = {
   settings: {
     thresholdKelembapanMin: 40,   // % -> Trigger penyiraman jika < 40%
     thresholdKelembapanMax: 65,   // % -> Berhenti menyiram jika >= 65%
-    durasiSiramOtomatisDetik: 15,  // Detik durasi siram per siklus di mode auto
+    durasiSiramOtomatisDetik: 60,  // Detik durasi siram per siklus di mode auto (default 1 menit)
     dosisPupukMl: 25,             // Takaran dosis pupuk per penyiraman
+    databaseIntervalMenit: 10,    // Interval input database: 10, 15, 30, atau 60 menit
     simulationActive: true        // Simulasi otomatis jika belum ada hardware riil
   },
   statusPerangkat: {
     online: true,
-    tipe: 'Simulator Aktif (Siap Sambung ESP32)',
+    tipe: 'Gateway Terhubung',
     terakhirSinkron: new Date().toLocaleTimeString('id-ID'),
     ipKlien: '127.0.0.1'
   },
@@ -236,6 +237,8 @@ function checkAutoRules() {
 // ==========================================
 // SIMULATOR REALISTIS (JIKA BELUM ADA HARDWARE)
 // ==========================================
+let lastDbLogTime = Date.now();
+
 setInterval(() => {
   if (!systemState.settings.simulationActive) return;
 
@@ -298,17 +301,20 @@ setInterval(() => {
   // Evaluasi mode otomatis
   checkAutoRules();
 
-  // Simpan data periodik ke database SQLite setiap ~10 detik (tiap 4 siklus)
-  simCycleCounter++;
-  if (simCycleCounter % 4 === 0) {
+  // Simpan data periodik ke database SQLite berdasarkan interval (10, 15, 30, atau 60 menit)
+  const dbIntervalMinutes = systemState.settings.databaseIntervalMenit || 10;
+  const dbIntervalMs = dbIntervalMinutes * 60 * 1000;
+  if (Date.now() - lastDbLogTime >= dbIntervalMs) {
+    lastDbLogTime = Date.now();
     db.logSensorData({
       suhu: systemState.telemetry.suhu,
       kelembapan: systemState.telemetry.kelembapan,
       ph: systemState.telemetry.ph,
       pompaAir: systemState.controls.pompaAir,
       pompaPupuk: systemState.controls.pompaPupuk,
-      source: 'simulator'
+      source: 'Sensor Gateway'
     });
+    addLog('DATABASE', `Data sensor otomatis dicatat ke database (Interval ${dbIntervalMinutes} menit).`, 'info');
   }
 
   // Broadcast data terbaru ke semua browser
@@ -516,16 +522,23 @@ app.post('/api/controls', (req, res) => {
   });
 });
 
-// 4. Ubah Pengaturan Threshold
+// 4. Ubah Pengaturan Threshold & Interval
 app.post('/api/settings', (req, res) => {
-  const { thresholdKelembapanMin, thresholdKelembapanMax, durasiSiramOtomatisDetik, simulationActive } = req.body;
+  const { thresholdKelembapanMin, thresholdKelembapanMax, durasiSiramOtomatisDetik, databaseIntervalMenit, simulationActive } = req.body;
 
   if (thresholdKelembapanMin !== undefined) systemState.settings.thresholdKelembapanMin = Number(thresholdKelembapanMin);
   if (thresholdKelembapanMax !== undefined) systemState.settings.thresholdKelembapanMax = Number(thresholdKelembapanMax);
   if (durasiSiramOtomatisDetik !== undefined) systemState.settings.durasiSiramOtomatisDetik = Number(durasiSiramOtomatisDetik);
+  if (databaseIntervalMenit !== undefined) {
+    const parsed = Number(databaseIntervalMenit);
+    if ([10, 15, 30, 60].includes(parsed)) {
+      systemState.settings.databaseIntervalMenit = parsed;
+      lastDbLogTime = Date.now();
+    }
+  }
   if (simulationActive !== undefined) systemState.settings.simulationActive = Boolean(simulationActive);
 
-  addLog('PENGATURAN', `Konfigurasi diubah: Min ${systemState.settings.thresholdKelembapanMin}%, Max ${systemState.settings.thresholdKelembapanMax}%, Durasi ${systemState.settings.durasiSiramOtomatisDetik}s.`, 'info');
+  addLog('PENGATURAN', `Konfigurasi diubah: Min ${systemState.settings.thresholdKelembapanMin}%, Max ${systemState.settings.thresholdKelembapanMax}%, Durasi ${systemState.settings.durasiSiramOtomatisDetik}s, DB Interval ${systemState.settings.databaseIntervalMenit}m.`, 'info');
 
   broadcast({
     type: 'SETTINGS_UPDATE',
@@ -536,6 +549,66 @@ app.post('/api/settings', (req, res) => {
   res.json({
     success: true,
     settings: systemState.settings
+  });
+});
+
+// Konfigurasi interval input database
+app.get('/api/database/config', (req, res) => {
+  const intervalMenit = systemState.settings.databaseIntervalMenit || 10;
+  res.json({
+    success: true,
+    databaseIntervalMenit: intervalMenit,
+    lastDbLogTime,
+    nextDbLogTime: lastDbLogTime + intervalMenit * 60 * 1000
+  });
+});
+
+app.post('/api/database/config', (req, res) => {
+  const { databaseIntervalMenit } = req.body;
+  const validIntervals = [10, 15, 30, 60];
+  const parsed = Number(databaseIntervalMenit);
+  if (!validIntervals.includes(parsed)) {
+    return res.status(400).json({ success: false, error: 'Interval harus salah satu dari: 10, 15, 30, atau 60 menit.' });
+  }
+  systemState.settings.databaseIntervalMenit = parsed;
+  lastDbLogTime = Date.now();
+  addLog('PENGATURAN', `Interval input database diubah menjadi ${parsed} menit.`, 'info');
+  broadcast({
+    type: 'SETTINGS_UPDATE',
+    settings: systemState.settings,
+    lastDbLogTime,
+    nextDbLogTime: lastDbLogTime + parsed * 60 * 1000
+  });
+  res.json({
+    success: true,
+    databaseIntervalMenit: parsed,
+    lastDbLogTime,
+    nextDbLogTime: lastDbLogTime + parsed * 60 * 1000
+  });
+});
+
+// Input manual langsung ke database saat tombol ditekan
+app.post('/api/database/input-now', (req, res) => {
+  const result = db.logSensorData({
+    suhu: systemState.telemetry.suhu,
+    kelembapan: systemState.telemetry.kelembapan,
+    ph: systemState.telemetry.ph,
+    pompaAir: systemState.controls.pompaAir,
+    pompaPupuk: systemState.controls.pompaPupuk,
+    source: req.body.source || 'Sensor Gateway'
+  });
+  lastDbLogTime = Date.now();
+  addLog('DATABASE', 'Data sensor langsung dicatat ke database oleh pengguna.', 'success');
+  broadcast({
+    type: 'DATABASE_UPDATED',
+    lastDbLogTime,
+    nextDbLogTime: lastDbLogTime + (systemState.settings.databaseIntervalMenit || 10) * 60 * 1000
+  });
+  res.json({
+    success: true,
+    message: 'Data sensor berhasil dicatat ke database.',
+    lastInsertRowid: result?.lastInsertRowid,
+    nextDbLogTime: lastDbLogTime + (systemState.settings.databaseIntervalMenit || 10) * 60 * 1000
   });
 });
 

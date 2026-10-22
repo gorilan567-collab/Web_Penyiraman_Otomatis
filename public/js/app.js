@@ -15,7 +15,8 @@
     settings: {
       thresholdKelembapanMin: 40,
       thresholdKelembapanMax: 65,
-      durasiSiramOtomatisDetik: 15,
+      durasiSiramOtomatisDetik: 60,
+      databaseIntervalMenit: 10,
       simulationActive: true
     }
   };
@@ -143,7 +144,7 @@
           history: data.history,
           logs: data.logs
         });
-        updateGatewayStatus(true, 'REST Gateway: Aktif');
+        updateGatewayStatus(true, 'Gateway: Terhubung');
       }
     } catch (err) {
       console.warn('REST fallback failed:', err);
@@ -162,9 +163,11 @@
         dot.classList.remove('online');
       }
     }
-    if (label) label.textContent = text;
-    if (sourceTag && systemState.settings) {
-      sourceTag.textContent = systemState.settings.simulationActive ? 'Simulasi' : 'ESP32 Riil';
+    if (label) {
+      label.textContent = online ? 'Gateway: Terhubung' : (text || 'Gateway: Terputus');
+    }
+    if (sourceTag) {
+      sourceTag.remove();
     }
   }
 
@@ -469,21 +472,33 @@
     }
   }
 
+  function formatWaterTime(seconds) {
+    if (seconds >= 60) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+    return String(seconds);
+  }
+
   // Countdowns
   function startWaterCountdown(seconds) {
     stopWaterCountdown();
     waterSecondsLeft = seconds;
     const box = document.getElementById('waterCountdown');
     const num = document.getElementById('waterCountdownNum');
+    const unit = document.querySelector('#waterCountdown .countdown-unit');
     if (box) box.classList.remove('hidden');
-    if (num) num.textContent = waterSecondsLeft;
+    if (num) num.textContent = formatWaterTime(waterSecondsLeft);
+    if (unit) unit.textContent = waterSecondsLeft >= 60 ? 'menit tersisa' : 'detik tersisa';
 
     countdownWaterTimer = setInterval(() => {
       waterSecondsLeft--;
       if (waterSecondsLeft <= 0) {
         stopWaterCountdown();
       } else {
-        if (num) num.textContent = waterSecondsLeft;
+        if (num) num.textContent = formatWaterTime(waterSecondsLeft);
+        if (unit) unit.textContent = waterSecondsLeft >= 60 ? 'menit tersisa' : 'detik tersisa';
       }
     }, 1000);
   }
@@ -973,8 +988,18 @@
     const rangeDur = document.getElementById('inputDuration');
     const dispDur = document.getElementById('displayDuration');
     if (rangeDur && dispDur) {
-      rangeDur.addEventListener('input', () => {
-        dispDur.textContent = `${rangeDur.value} Detik`;
+      rangeDur.addEventListener('change', () => {
+        const val = Number(rangeDur.value);
+        dispDur.textContent = val >= 60 ? `${val / 60} Menit` : `${val} Detik`;
+      });
+    }
+
+    const selectDbInt = document.getElementById('inputDbIntervalSettings');
+    const dispDbInt = document.getElementById('displayDbInterval');
+    if (selectDbInt && dispDbInt) {
+      selectDbInt.addEventListener('change', () => {
+        const val = Number(selectDbInt.value);
+        dispDbInt.textContent = val >= 60 ? '1 Jam' : `${val} Menit`;
       });
     }
 
@@ -986,6 +1011,7 @@
         const minVal = Number(rangeMin.value);
         const maxVal = Number(rangeMax.value);
         const durVal = Number(rangeDur.value);
+        const dbIntVal = selectDbInt ? Number(selectDbInt.value) : undefined;
         const simActive = document.getElementById('checkSimulation').checked;
 
         if (minVal >= maxVal) {
@@ -1001,6 +1027,7 @@
               thresholdKelembapanMin: minVal,
               thresholdKelembapanMax: maxVal,
               durasiSiramOtomatisDetik: durVal,
+              databaseIntervalMenit: dbIntVal,
               simulationActive: simActive
             })
           });
@@ -1053,6 +1080,8 @@
     const dMax = document.getElementById('displayThreshMax');
     const rDur = document.getElementById('inputDuration');
     const dDur = document.getElementById('displayDuration');
+    const selDb = document.getElementById('inputDbIntervalSettings');
+    const dDb = document.getElementById('displayDbInterval');
     const cSim = document.getElementById('checkSimulation');
 
     if (rMin && dMin) {
@@ -1064,8 +1093,14 @@
       dMax.textContent = `${s.thresholdKelembapanMax}%`;
     }
     if (rDur && dDur) {
-      rDur.value = s.durasiSiramOtomatisDetik;
-      dDur.textContent = `${s.durasiSiramOtomatisDetik} Detik`;
+      rDur.value = s.durasiSiramOtomatisDetik || 60;
+      const v = Number(rDur.value);
+      dDur.textContent = v >= 60 ? `${v / 60} Menit` : `${v} Detik`;
+    }
+    if (selDb && dDb) {
+      selDb.value = s.databaseIntervalMenit || 10;
+      const v = Number(selDb.value);
+      dDb.textContent = v >= 60 ? '1 Jam' : `${v} Menit`;
     }
     if (cSim) {
       cSim.checked = s.simulationActive;

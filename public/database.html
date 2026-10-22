@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Database & Riwayat - AquaSmart IoT</title>
-  <meta name="description" content="Arsip database historis data sensor dan riwayat penyiraman air serta fertigasi pupuk otomatis IoT.">
-  
+  <meta name="description"
+    content="Arsip database historis data sensor dan riwayat penyiraman air serta fertigasi pupuk otomatis IoT.">
+
   <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
   <!-- Vanilla CSS Design System -->
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
   <!-- Background Glow & Grid Ornaments -->
   <div class="bg-mesh" aria-hidden="true">
@@ -28,11 +33,11 @@
       <div class="nav-brand">
         <div class="brand-icon-wrapper">
           <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)"/>
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)" />
             <defs>
               <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#10b981"/>
-                <stop offset="100%" stop-color="#06b6d4"/>
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#06b6d4" />
               </linearGradient>
             </defs>
           </svg>
@@ -67,10 +72,9 @@
 
       <!-- Quick Status Badges -->
       <div class="nav-status-group">
-        <div class="status-pill device-status" id="deviceStatusPill" title="Status Database & Gateway">
+        <div class="status-pill device-status" id="deviceStatusPill" title="Status koneksi gateway">
           <span class="status-dot online"></span>
-          <span class="status-label" id="deviceStatusText">Database: SQLite Aktif</span>
-          <span class="source-tag">Lokal WAL</span>
+          <span class="status-label" id="deviceStatusText">Gateway: Terhubung</span>
         </div>
 
         <div class="status-pill clock-pill" id="digitalClockPill">
@@ -85,7 +89,7 @@
 
     <!-- MAIN DATABASE CONTENT -->
     <main class="main-container">
-      
+
       <!-- DATABASE HEADER -->
       <section class="db-header">
         <div class="db-title-row">
@@ -95,14 +99,17 @@
               <span class="db-title-badge">Data Records & History</span>
             </h2>
             <p class="db-subtitle">
-              Pusat penyimpanan telemetri sensor lingkungan dan rekap historis seluruh operasi penyiraman otomatis serta manual yang tersimpan secara persisten.
+              Pusat penyimpanan telemetri sensor lingkungan dan rekap historis seluruh operasi penyiraman otomatis serta
+              manual yang tersimpan secara persisten.
             </p>
           </div>
           <div class="db-header-actions">
-            <span id="autoRefreshCountdown" class="auto-refresh-badge" title="Data akan di-refresh otomatis setiap 30 menit">
-              ⏱ Auto-refresh dalam --:--
+            <span id="autoRefreshCountdown" class="auto-refresh-badge"
+              title="Data akan di-refresh otomatis">
+              ⏱ Sinkron otomatis dalam --:--
             </span>
-            <button id="btnDownloadAllCsv" class="btn-db btn-db-success" title="Unduh seluruh database sebagai file CSV">
+            <button id="btnDownloadAllCsv" class="btn-db btn-db-success"
+              title="Unduh seluruh database sebagai file CSV">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -124,6 +131,44 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
               </svg>
               <span>Refresh Sinkron</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- DATABASE LOGGING & INPUT INTERVAL CONFIGURATION -->
+        <div class="db-interval-card">
+          <div class="db-interval-left">
+            <div class="db-interval-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div class="db-interval-heading">Interval Input Database (Pencatatan Otomatis)</div>
+              <div class="db-interval-desc">Tentukan seberapa sering data sensor lingkungan disimpan ke database SQLite persisten</div>
+            </div>
+          </div>
+          <div class="db-interval-right">
+            <div class="interval-field-group">
+              <label for="dbIntervalSelect" class="interval-label">Frekuensi Input:</label>
+              <select id="dbIntervalSelect" class="db-select interval-select" title="Pilih frekuensi pencatatan ke database">
+                <option value="10">Setiap 10 Menit</option>
+                <option value="15">Setiap 15 Menit</option>
+                <option value="30">Setiap 30 Menit</option>
+                <option value="60">Setiap 1 Jam</option>
+              </select>
+            </div>
+            <span id="dbNextInputCountdown" class="auto-refresh-badge" title="Waktu menuju pencatatan data berikutnya">
+              ⏱ Input berikutnya: --:--
+            </span>
+            <button id="btnManualDbLog" class="btn-db btn-db-primary" title="Simpan data sensor saat ini langsung ke database">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Input Data Sekarang</span>
             </button>
           </div>
         </div>
@@ -358,7 +403,8 @@
               </svg>
               <span>Refresh</span>
             </button>
-            <button id="btnDownloadWateringCsv" class="btn-db btn-db-success" title="Unduh riwayat penyiraman sebagai file CSV">
+            <button id="btnDownloadWateringCsv" class="btn-db btn-db-success"
+              title="Unduh riwayat penyiraman sebagai file CSV">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -450,4 +496,5 @@
   <!-- Database Controller (No Chart.js needed) -->
   <script src="js/database.js"></script>
 </body>
+
 </html>

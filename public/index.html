@@ -70,7 +70,6 @@
         <div class="status-pill device-status" id="deviceStatusPill" title="Status koneksi gateway & perangkat">
           <span class="status-dot online"></span>
           <span class="status-label" id="deviceStatusText">Gateway: Terhubung</span>
-          <span class="source-tag" id="sourceTag">Simulasi</span>
         </div>
 
         <div class="status-pill clock-pill" id="digitalClockPill">
@@ -305,61 +304,6 @@
           </div>
         </article>
 
-        <!-- CARD 4: STATUS TANGKI & RESERVOIR -->
-        <article class="sensor-card card-reservoir" id="cardReservoir">
-          <div class="card-header">
-            <div class="sensor-title-wrapper">
-              <div class="sensor-badge-icon icon-cyan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                </svg>
-              </div>
-              <div>
-                <h3 class="sensor-name">Tangki & Akumulasi</h3>
-                <span class="sensor-tag">Level Cadangan Cairan</span>
-              </div>
-            </div>
-            <span class="badge-status status-optimal" id="tankStatusBadge">Cukup</span>
-          </div>
-
-          <div class="tank-levels-group">
-            <!-- Tangki Air -->
-            <div class="tank-subitem">
-              <div class="tank-info-row">
-                <span class="tank-label">💧 Tangki Air Utama</span>
-                <span class="tank-val" id="valTangkiAir">85%</span>
-              </div>
-              <div class="linear-bar">
-                <div class="linear-bar-fill fill-water" id="fillTangkiAir" style="width: 85%;"></div>
-              </div>
-            </div>
-            <!-- Tangki Pupuk -->
-            <div class="tank-subitem">
-              <div class="tank-info-row">
-                <span class="tank-label">🌿 Tangki Pupuk Cair (NPK)</span>
-                <span class="tank-val" id="valTangkiPupuk">92%</span>
-              </div>
-              <div class="linear-bar">
-                <div class="linear-bar-fill fill-fert" id="fillTangkiPupuk" style="width: 92%;"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-footer-stats">
-            <div class="stat-item">
-              <span class="stat-label">Air Terpakai Hari Ini</span>
-              <span class="stat-val" id="totalAirVal">4.50 L</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-label">Pupuk Terpakai</span>
-              <span class="stat-val" id="totalPupukVal">75 ml</span>
-            </div>
-          </div>
-        </article>
-
       </section>
 
       <!-- ACTUATOR CONTROLS SECTION (TOMBOLE PENYIRAMAN AIR & PUPUK) -->
@@ -434,11 +378,11 @@
 
             <!-- Quick Burst Buttons (Durasi Tertentu) -->
             <div class="preset-triggers">
-              <span class="preset-label">Siram Cepat Terjadwal:</span>
+              <span class="preset-label">Pilihan Penyiraman Air:</span>
               <div class="preset-btns-row">
-                <button class="btn-preset" data-action="water-burst" data-duration="10">+10 Detik</button>
-                <button class="btn-preset" data-action="water-burst" data-duration="30">+30 Detik</button>
-                <button class="btn-preset" data-action="water-burst" data-duration="60">+1 Menit</button>
+                <button class="btn-preset" data-action="water-burst" data-duration="60">1 Menit</button>
+                <button class="btn-preset" data-action="water-burst" data-duration="300">5 Menit</button>
+                <button class="btn-preset" data-action="water-burst" data-duration="600">10 Menit</button>
               </div>
             </div>
 
@@ -706,11 +650,29 @@
 
             <div class="form-group">
               <div class="form-label-row">
-                <label for="inputDuration">Durasi Maksimal Penyiraman Otomatis</label>
-                <span class="range-display" id="displayDuration">15 Detik</span>
+                <label for="inputDuration">Durasi Default Penyiraman Otomatis</label>
+                <span class="range-display" id="displayDuration">1 Menit</span>
               </div>
-              <input type="range" id="inputDuration" min="5" max="120" step="5" value="15" class="styled-range">
-              <span class="input-hint">Batas waktu keamanan (safety timeout) pemadaman pompa agar tidak membanjiri tanaman.</span>
+              <select id="inputDuration" class="db-select" style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-heading); font-family: var(--font-body); font-size: 0.95rem;">
+                <option value="60">1 Menit (60 Detik)</option>
+                <option value="300">5 Menit (300 Detik)</option>
+                <option value="600">10 Menit (600 Detik)</option>
+              </select>
+              <span class="input-hint">Pilihan durasi siklus penyiraman air otomatis maupun pengaman pompa.</span>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="inputDbIntervalSettings">Interval Input Database</label>
+                <span class="range-display" id="displayDbInterval">10 Menit</span>
+              </div>
+              <select id="inputDbIntervalSettings" class="db-select" style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--cyan-primary); font-family: var(--font-body); font-size: 0.95rem; font-weight: 600;">
+                <option value="10">Setiap 10 Menit</option>
+                <option value="15">Setiap 15 Menit</option>
+                <option value="30">Setiap 30 Menit</option>
+                <option value="60">Setiap 1 Jam</option>
+              </select>
+              <span class="input-hint">Frekuensi otomatis pencatatan dan penyimpanan data sensor ke database SQLite.</span>
             </div>
 
             <div class="form-group-checkbox">

@@ -12,10 +12,9 @@ Aplikasi web dashboard canggih untuk memantau data sensor secara *real-time* dan
    - **Suhu Lingkungan & Tanah (°C)**: Tampilan angka neon dinamis, indikator kenyamanan tanaman, bar thermometer, dan grafik garis real-time.
    - **Kelembapan Tanah (%)**: Gauge melingkar (*circular progress*), status ambang batas siram otomatis, dan visualisasi grafik temporal.
    - **pH Tanah**: Nilai derajat keasaman dengan pita spektrum warna (1–14) beserta pointer live, status netral/asam/basa, dan grafik garis real-time.
-   - **Level Tangki & Akumulasi**: Indikator persentase volume tangki air dan tangki pupuk cair, serta total volume terpakai hari ini.
 
 2. **Kendali Aktuator Lengkap**:
-   - **Tombol Penyiraman Air**: Sakelar ON/OFF interaktif dengan animasi gelombang aliran pipa dan semprotan air, serta opsi siram cepat (*Quick Burst*: +10 detik, +30 detik, +1 menit) dilengkapi penghitung waktu mundur (*countdown*).
+   - **Tombol Penyiraman Air**: Sakelar ON/OFF interaktif dengan animasi gelombang aliran pipa dan semprotan air, serta opsi durasi penyiraman (1 menit, 5 menit, dan 10 menit) dilengkapi penghitung waktu mundur (*countdown* format M:SS).
    - **Tombol Penyiraman Pupuk (Fertigasi Cair)**: Sakelar kendali pompa dosis pupuk cair dengan opsi dosis presisi (10 ml, 25 ml, 50 ml).
    - **Tombol Mode (AUTO vs MANUAL)**:
      - **Mode AUTO**: Logika cerdas otomatis menyalakan pompa air ketika kelembapan tanah &lt; batas minimum (default: 40%) dan berhenti setelah target tercapai atau batas durasi selesai.
