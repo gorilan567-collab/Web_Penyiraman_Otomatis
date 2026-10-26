@@ -376,7 +376,7 @@
         desc.innerHTML = `Sistem otomatis memantau kelembapan tanah. Pompa air akan aktif mandiri bila kelembapan &lt; <strong>${systemState.settings.thresholdKelembapanMin}%</strong> dan mati saat mencapai target <strong>${systemState.settings.thresholdKelembapanMax}%</strong>.`;
       }
       if (controlNote) {
-        controlNote.textContent = 'Mode Auto: Sistem mengontrol penyiraman secara cerdas. Anda tetap dapat melakukan override manual kapan saja.';
+        controlNote.textContent = 'Mode Auto: Sistem mengontrol penyiraman otomatis. Tombol penyiraman manual dinonaktifkan.';
       }
     } else {
       if (btnManual) btnManual.classList.add('active');
@@ -386,10 +386,10 @@
         badge.classList.add('manual-active');
       }
       if (desc) {
-        desc.innerHTML = `Kontrol manual aktif penuh. Pompa air dan pompa pupuk hanya akan beroperasi saat Anda menekan tombol penyiraman di bawah.`;
+        desc.innerHTML = `Kontrol manual aktif penuh. Atur durasi penyiraman dengan slider dan tekan tombol untuk mengaktifkan pompa.`;
       }
       if (controlNote) {
-        controlNote.textContent = 'Mode Manual: Kendali sakelar sepenuhnya berada pada tombol penyiraman.';
+        controlNote.textContent = 'Mode Manual: Kendali sakelar aktif. Geser slider untuk mengatur durasi (maksimal 60 detik).';
       }
     }
   }
@@ -398,6 +398,7 @@
   function updateActuatorControlsUI() {
     const isWaterOn = systemState.controls.pompaAir;
     const isFertOn = systemState.controls.pompaPupuk;
+    const isAuto = systemState.controls.mode === 'auto';
 
     // Card water
     const cardWater = document.getElementById('actuatorWaterCard');
@@ -407,6 +408,8 @@
     const labelWater = document.getElementById('waterFlowLabel');
     const btnWater = document.getElementById('btnToggleWater');
     const btnWaterText = document.getElementById('btnWaterText');
+    const sliderGroupWater = document.getElementById('waterSliderGroup');
+    const inputWaterDur = document.getElementById('inputWaterDuration');
 
     if (isWaterOn) {
       if (cardWater) cardWater.classList.add('active');
@@ -443,12 +446,14 @@
     const labelFert = document.getElementById('fertFlowLabel');
     const btnFert = document.getElementById('btnToggleFert');
     const btnFertText = document.getElementById('btnFertText');
+    const sliderGroupFert = document.getElementById('fertSliderGroup');
+    const inputFertDur = document.getElementById('inputFertDuration');
 
     if (isFertOn) {
       if (cardFert) cardFert.classList.add('active');
       if (badgeFert) {
         badgeFert.className = 'actuator-state-badge state-on-fert';
-        if (textFert) textFert.textContent = 'FERTIGASI AKTIF';
+        if (textFert) textFert.textContent = 'INJEKSI AKTIF';
       }
       if (animFert) animFert.classList.add('flowing');
       if (labelFert) labelFert.textContent = '🌿 Injeksi Pupuk Cair Berlangsung...';
@@ -469,6 +474,49 @@
         if (btnFertText) btnFertText.textContent = 'AKTIFKAN PENYIRAMAN PUPUK';
       }
       stopFertCountdown();
+    }
+
+    // MODE AUTO: Ubah tampilan tombol penyiraman menjadi seperti tombol mati yang tidak bisa ditekan
+    if (isAuto) {
+      if (btnWater) {
+        btnWater.classList.add('mode-auto-disabled');
+        btnWater.disabled = true;
+        btnWater.setAttribute('aria-disabled', 'true');
+        btnWater.setAttribute('title', 'Tombol penyiraman dinonaktifkan dalam Mode Auto');
+        if (!isWaterOn && btnWaterText) {
+          btnWaterText.textContent = 'PENYIRAMAN AIR (NONAKTIF - MODE AUTO)';
+        }
+      }
+      if (btnFert) {
+        btnFert.classList.add('mode-auto-disabled');
+        btnFert.disabled = true;
+        btnFert.setAttribute('aria-disabled', 'true');
+        btnFert.setAttribute('title', 'Tombol penyiraman pupuk dinonaktifkan dalam Mode Auto');
+        if (!isFertOn && btnFertText) {
+          btnFertText.textContent = 'PENYIRAMAN PUPUK (NONAKTIF - MODE AUTO)';
+        }
+      }
+      if (sliderGroupWater) sliderGroupWater.classList.add('mode-auto-disabled');
+      if (inputWaterDur) inputWaterDur.disabled = true;
+      if (sliderGroupFert) sliderGroupFert.classList.add('mode-auto-disabled');
+      if (inputFertDur) inputFertDur.disabled = true;
+    } else {
+      if (btnWater) {
+        btnWater.classList.remove('mode-auto-disabled');
+        btnWater.disabled = false;
+        btnWater.removeAttribute('aria-disabled');
+        btnWater.removeAttribute('title');
+      }
+      if (btnFert) {
+        btnFert.classList.remove('mode-auto-disabled');
+        btnFert.disabled = false;
+        btnFert.removeAttribute('aria-disabled');
+        btnFert.removeAttribute('title');
+      }
+      if (sliderGroupWater) sliderGroupWater.classList.remove('mode-auto-disabled');
+      if (inputWaterDur) inputWaterDur.disabled = false;
+      if (sliderGroupFert) sliderGroupFert.classList.remove('mode-auto-disabled');
+      if (inputFertDur) inputFertDur.disabled = false;
     }
   }
 
@@ -791,9 +839,13 @@
 
   // Toggle Pompa Air
   function toggleWaterPump() {
+    if (systemState.controls.mode === 'auto') {
+      return; // Tombol mati / nonaktif saat mode auto
+    }
     const nextState = !systemState.controls.pompaAir;
     if (nextState) {
-      const dur = systemState.settings.durasiSiramOtomatisDetik || 15;
+      const slider = document.getElementById('inputWaterDuration');
+      const dur = slider ? Math.min(60, Math.max(1, Number(slider.value))) : (systemState.settings.durasiSiramOtomatisDetik || 15);
       startWaterCountdown(dur);
       sendControlRequest({ pompaAir: true, durasiSiram: dur });
     } else {
@@ -802,28 +854,21 @@
     }
   }
 
-  // Burst Siram Air Cepat
-  function triggerWaterBurst(seconds) {
-    startWaterCountdown(seconds);
-    sendControlRequest({ pompaAir: true, durasiSiram: seconds });
-  }
-
   // Toggle Pompa Pupuk
   function toggleFertPump() {
+    if (systemState.controls.mode === 'auto') {
+      return; // Tombol mati / nonaktif saat mode auto
+    }
     const nextState = !systemState.controls.pompaPupuk;
     if (nextState) {
-      startFertCountdown(5);
-      sendControlRequest({ pompaPupuk: true, volumePupuk: 25 });
+      const slider = document.getElementById('inputFertDuration');
+      const dur = slider ? Math.min(60, Math.max(1, Number(slider.value))) : 10;
+      startFertCountdown(dur);
+      sendControlRequest({ pompaPupuk: true, durasiPupuk: dur });
     } else {
       stopFertCountdown();
       sendControlRequest({ pompaPupuk: false });
     }
-  }
-
-  // Injeksi Pupuk Dosis Presisi
-  function triggerFertDose(volumeMl) {
-    startFertCountdown(5);
-    sendControlRequest({ pompaPupuk: true, volumePupuk: volumeMl });
   }
 
   // Emergency Cut-off
@@ -1128,19 +1173,23 @@
     const btnFert = document.getElementById('btnToggleFert');
     if (btnFert) btnFert.addEventListener('click', toggleFertPump);
 
-    // Preset buttons
-    document.querySelectorAll('.btn-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.getAttribute('data-action');
-        if (action === 'water-burst') {
-          const dur = Number(btn.getAttribute('data-duration'));
-          triggerWaterBurst(dur);
-        } else if (action === 'fert-dose') {
-          const vol = Number(btn.getAttribute('data-volume'));
-          triggerFertDose(vol);
-        }
+    // Water duration slider (1 - 60 detik)
+    const inputWaterDur = document.getElementById('inputWaterDuration');
+    const dispWaterDur = document.getElementById('displayWaterDuration');
+    if (inputWaterDur && dispWaterDur) {
+      inputWaterDur.addEventListener('input', () => {
+        dispWaterDur.textContent = `${inputWaterDur.value} Detik`;
       });
-    });
+    }
+
+    // Fertilizer duration slider (1 - 60 detik)
+    const inputFertDur = document.getElementById('inputFertDuration');
+    const dispFertDur = document.getElementById('displayFertDuration');
+    if (inputFertDur && dispFertDur) {
+      inputFertDur.addEventListener('input', () => {
+        dispFertDur.textContent = `${inputFertDur.value} Detik`;
+      });
+    }
 
     // Chart pause / resume
     const btnPause = document.getElementById('btnPauseChart');

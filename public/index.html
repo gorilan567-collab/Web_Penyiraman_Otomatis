@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AquaSmart IoT - Monitoring & Kontrol Penyiraman Otomatis</title>
-  <meta name="description" content="Dashboard monitoring real-time sensor suhu, kelembapan tanah, dan pH tanah serta kontrol otomatis & manual penyiraman air dan pupuk IoT.">
-  
+  <meta name="description"
+    content="Dashboard monitoring real-time sensor suhu, kelembapan tanah, dan pH tanah serta kontrol otomatis & manual penyiraman air dan pupuk IoT.">
+
   <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
   <!-- Vanilla CSS Design System -->
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
   <!-- Background Glow & Grid Ornaments -->
   <div class="bg-mesh" aria-hidden="true">
@@ -28,11 +33,11 @@
       <div class="nav-brand">
         <div class="brand-icon-wrapper">
           <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)"/>
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#brandGrad)" />
             <defs>
               <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#10b981"/>
-                <stop offset="100%" stop-color="#06b6d4"/>
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#06b6d4" />
               </linearGradient>
             </defs>
           </svg>
@@ -81,22 +86,27 @@
         </div>
 
         <!-- Utility Buttons -->
-        <button id="btnSoundToggle" class="btn-icon" title="Toggle Efek Suara (Audio Feedback)" aria-label="Audio Feedback">
+        <button id="btnSoundToggle" class="btn-icon" title="Toggle Efek Suara (Audio Feedback)"
+          aria-label="Audio Feedback">
           <svg id="iconSoundOn" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
           </svg>
-          <svg id="iconSoundOff" class="icon-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg id="iconSoundOff" class="icon-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <line x1="23" y1="9" x2="17" y2="15"></line>
             <line x1="17" y1="9" x2="23" y2="15"></line>
           </svg>
         </button>
 
-        <button id="btnOpenSettings" class="btn-icon" title="Pengaturan Threshold & Kode ESP32" aria-label="Buka Pengaturan">
+        <button id="btnOpenSettings" class="btn-icon" title="Pengaturan Threshold & Kode ESP32"
+          aria-label="Buka Pengaturan">
           <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
           </svg>
         </button>
       </div>
@@ -104,13 +114,15 @@
 
     <!-- MAIN DASHBOARD CONTENT -->
     <main class="main-container">
-      
+
       <!-- MODE & QUICK ACTIONS BANNER -->
       <section class="mode-banner" id="modeBanner">
         <div class="mode-info-block">
           <div class="mode-icon-circle" id="modeIndicatorIcon">
             <svg class="mode-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+              <path
+                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
+              </path>
             </svg>
           </div>
           <div>
@@ -119,7 +131,8 @@
               <span class="badge-mode" id="activeModeBadge">MODE AUTO</span>
             </div>
             <p class="mode-description" id="modeDescriptionText">
-              Sistem otomatis memantau kelembapan tanah. Pompa air akan aktif mandiri bila kelembapan &lt; <strong id="descThreshMin">40%</strong> dan mati saat mencapai target <strong id="descThreshMax">65%</strong>.
+              Sistem otomatis memantau kelembapan tanah. Pompa air akan aktif mandiri bila kelembapan &lt; <strong
+                id="descThreshMin">40%</strong> dan mati saat mencapai target <strong id="descThreshMax">65%</strong>.
             </p>
           </div>
         </div>
@@ -147,7 +160,7 @@
 
       <!-- SENSOR TELEMETRY CARDS (REAL-TIME METRICS) -->
       <section class="telemetry-grid" aria-label="Data Realtime Sensor">
-        
+
         <!-- CARD 1: SUHU LINGKUNGAN -->
         <article class="sensor-card card-suhu" id="cardSuhu">
           <div class="card-header">
@@ -225,7 +238,8 @@
             <div class="circular-progress-wrapper">
               <svg class="circular-svg" viewBox="0 0 100 100">
                 <circle class="circle-bg" cx="50" cy="50" r="42"></circle>
-                <circle class="circle-progress" id="moistureCircleProgress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="145"></circle>
+                <circle class="circle-progress" id="moistureCircleProgress" cx="50" cy="50" r="42"
+                  stroke-dasharray="264" stroke-dashoffset="145"></circle>
               </svg>
               <div class="circle-icon-center">
                 <span id="moistureCircleText">45%</span>
@@ -324,11 +338,11 @@
         </div>
 
         <div class="actuators-grid">
-          
+
           <!-- ACTUATOR 1: KONTROL PENYIRAMAN AIR -->
           <div class="actuator-card" id="actuatorWaterCard">
             <div class="actuator-glow glow-water"></div>
-            
+
             <div class="actuator-header">
               <div class="actuator-title-box">
                 <div class="actuator-icon-wrap icon-water">
@@ -376,14 +390,14 @@
               </button>
             </div>
 
-            <!-- Quick Burst Buttons (Durasi Tertentu) -->
-            <div class="preset-triggers">
-              <span class="preset-label">Pilihan Penyiraman Air:</span>
-              <div class="preset-btns-row">
-                <button class="btn-preset" data-action="water-burst" data-duration="60">1 Menit</button>
-                <button class="btn-preset" data-action="water-burst" data-duration="300">5 Menit</button>
-                <button class="btn-preset" data-action="water-burst" data-duration="600">10 Menit</button>
+            <!-- Pengaturan Durasi Penyiraman Air (Slider Maksimal 60 Detik) -->
+            <div class="form-group slider-control-group" id="waterSliderGroup">
+              <div class="form-label-row">
+                <label for="inputWaterDuration">Pilihan Penyiraman Air</label>
+                <span class="range-display" id="displayWaterDuration">15 Detik</span>
               </div>
+              <input type="range" id="inputWaterDuration" min="1" max="60" value="15" class="styled-range">
+              <span class="input-hint">Atur durasi penyiraman air otomatis mati (1 - 60 detik).</span>
             </div>
 
           </div>
@@ -391,7 +405,7 @@
           <!-- ACTUATOR 2: KONTROL PENYIRAMAN PUPUK -->
           <div class="actuator-card" id="actuatorFertCard">
             <div class="actuator-glow glow-fert"></div>
-            
+
             <div class="actuator-header">
               <div class="actuator-title-box">
                 <div class="actuator-icon-wrap icon-fert">
@@ -400,8 +414,8 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="actuator-name">Pompa Dosis Pupuk (Fertigasi)</h3>
-                  <span class="actuator-sub">Relay 2 - Dosing Pump Pupuk Cair NPK</span>
+                  <h3 class="actuator-name">Pompa Penyiraman Pupuk (Fertigasi)</h3>
+                  <span class="actuator-sub">Relay 2 - Katup Injeksi Pupuk Cair NPK</span>
                 </div>
               </div>
               <div class="actuator-state-badge state-off" id="fertStateBadge">
@@ -432,20 +446,20 @@
                   <span class="btn-text" id="btnFertText">AKTIFKAN PENYIRAMAN PUPUK</span>
                 </div>
                 <div class="btn-countdown hidden" id="fertCountdown">
-                  <span class="countdown-num" id="fertCountdownNum">5</span>
-                  <span class="countdown-unit">detik injeksi</span>
+                  <span class="countdown-num" id="fertCountdownNum">10</span>
+                  <span class="countdown-unit">detik tersisa</span>
                 </div>
               </button>
             </div>
 
-            <!-- Quick Dose Presets (Takaran Pupuk ml) -->
-            <div class="preset-triggers">
-              <span class="preset-label">Injeksi Dosis Presisi:</span>
-              <div class="preset-btns-row">
-                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="10">Dosis 10 ml</button>
-                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="25">Dosis 25 ml</button>
-                <button class="btn-preset btn-preset-fert" data-action="fert-dose" data-volume="50">Dosis 50 ml</button>
+            <!-- Pengaturan Durasi Injeksi Pupuk (Slider Maksimal 60 Detik) -->
+            <div class="form-group slider-control-group" id="fertSliderGroup">
+              <div class="form-label-row">
+                <label for="inputFertDuration">Pilihan Injeksi Pupuk</label>
+                <span class="range-display range-display-fert" id="displayFertDuration">10 Detik</span>
               </div>
+              <input type="range" id="inputFertDuration" min="1" max="60" value="10" class="styled-range styled-range-fert">
+              <span class="input-hint">Atur durasi pengaliran pupuk cair otomatis mati (1 - 60 detik).</span>
             </div>
 
           </div>
@@ -460,7 +474,7 @@
             <h2 class="section-title">Grafik Pemantauan Real-Time</h2>
             <p class="section-subtitle">Visualisasi tren temporal data sensor suhu, kelembapan, dan pH tanah</p>
           </div>
-          
+
           <div class="chart-controls-group">
             <button id="btnPauseChart" class="btn-chart-ctrl" title="Jeda pembaruan grafik">
               <svg id="iconPause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -483,7 +497,7 @@
         </div>
 
         <div class="charts-grid">
-          
+
           <!-- CHART 1: SUHU (°C) -->
           <div class="chart-card">
             <div class="chart-header">
@@ -526,7 +540,8 @@
             </div>
             <div class="chart-legend-row">
               <span class="legend-item"><span class="legend-box box-emerald"></span> Kelembapan (%)</span>
-              <span class="legend-item"><span class="legend-line line-amber"></span> Batas Bawah Auto (<span id="legendThreshMin">40%</span>)</span>
+              <span class="legend-item"><span class="legend-line line-amber"></span> Batas Bawah Auto (<span
+                  id="legendThreshMin">40%</span>)</span>
             </div>
           </div>
 
@@ -592,7 +607,7 @@
       <div class="footer-inner">
         <span>🌱 <strong>AquaSmart IoT</strong> v1.0 • Sistem Monitoring & Irigasi Presisi</span>
         <span class="footer-links">
-          <a href="#" id="linkESPGuide">Panduan Koneksi ESP32</a> • 
+          <a href="#" id="linkESPGuide">Panduan Koneksi ESP32</a> •
           <a href="#" id="linkThresholdConfig">Ubah Ambang Batas</a>
         </span>
       </div>
@@ -607,7 +622,9 @@
           <div class="modal-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
             </svg>
           </div>
           <div>
@@ -626,7 +643,7 @@
       </div>
 
       <div class="modal-body">
-        
+
         <!-- TAB 1: AMBANG BATAS OTOMASI -->
         <div class="tab-content active" id="tab-threshold">
           <form id="settingsForm" class="settings-form">
@@ -636,7 +653,8 @@
                 <span class="range-display" id="displayThreshMin">40%</span>
               </div>
               <input type="range" id="inputThreshMin" min="15" max="60" value="40" class="styled-range">
-              <span class="input-hint">Jika kelembapan tanah di bawah nilai ini pada Mode AUTO, penyiraman air akan otomatis menyala.</span>
+              <span class="input-hint">Jika kelembapan tanah di bawah nilai ini pada Mode AUTO, penyiraman air akan
+                otomatis menyala.</span>
             </div>
 
             <div class="form-group">
@@ -645,7 +663,8 @@
                 <span class="range-display" id="displayThreshMax">65%</span>
               </div>
               <input type="range" id="inputThreshMax" min="50" max="90" value="65" class="styled-range">
-              <span class="input-hint">Penyiraman akan berhenti otomatis jika kelembapan tanah telah mencapai persentase ini.</span>
+              <span class="input-hint">Penyiraman akan berhenti otomatis jika kelembapan tanah telah mencapai persentase
+                ini.</span>
             </div>
 
             <div class="form-group">
@@ -653,7 +672,8 @@
                 <label for="inputDuration">Durasi Default Penyiraman Otomatis</label>
                 <span class="range-display" id="displayDuration">1 Menit</span>
               </div>
-              <select id="inputDuration" class="db-select" style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-heading); font-family: var(--font-body); font-size: 0.95rem;">
+              <select id="inputDuration" class="db-select"
+                style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-heading); font-family: var(--font-body); font-size: 0.95rem;">
                 <option value="60">1 Menit (60 Detik)</option>
                 <option value="300">5 Menit (300 Detik)</option>
                 <option value="600">10 Menit (600 Detik)</option>
@@ -666,13 +686,15 @@
                 <label for="inputDbIntervalSettings">Interval Input Database</label>
                 <span class="range-display" id="displayDbInterval">10 Menit</span>
               </div>
-              <select id="inputDbIntervalSettings" class="db-select" style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--cyan-primary); font-family: var(--font-body); font-size: 0.95rem; font-weight: 600;">
+              <select id="inputDbIntervalSettings" class="db-select"
+                style="width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--cyan-primary); font-family: var(--font-body); font-size: 0.95rem; font-weight: 600;">
                 <option value="10">Setiap 10 Menit</option>
                 <option value="15">Setiap 15 Menit</option>
                 <option value="30">Setiap 30 Menit</option>
                 <option value="60">Setiap 1 Jam</option>
               </select>
-              <span class="input-hint">Frekuensi otomatis pencatatan dan penyimpanan data sensor ke database SQLite.</span>
+              <span class="input-hint">Frekuensi otomatis pencatatan dan penyimpanan data sensor ke database
+                SQLite.</span>
             </div>
 
             <div class="form-group-checkbox">
@@ -682,7 +704,8 @@
               </label>
               <div class="checkbox-label-block">
                 <strong>Simulasi Data Natural Aktif</strong>
-                <span>Secara otomatis menghasilkan perubahan suhu & kelembapan tanah saat belum tersambung ke sensor fisik.</span>
+                <span>Secara otomatis menghasilkan perubahan suhu & kelembapan tanah saat belum tersambung ke sensor
+                  fisik.</span>
               </div>
             </div>
 
@@ -769,7 +792,9 @@
         <!-- TAB 3: KODE SKRIP ARDUINO / C++ -->
         <div class="tab-content" id="tab-code">
           <div class="code-guide-header">
-            <p>Salin kode ini dan upload ke ESP32 Anda via Arduino IDE. File juga tersedia di folder <code>esp32_firmware/esp32_penyiraman.ino</code>.</p>
+            <p>Salin kode ini dan upload ke ESP32 Anda via Arduino IDE. File juga tersedia di folder
+              <code>esp32_firmware/esp32_penyiraman.ino</code>.
+            </p>
             <button class="btn-copy-code" id="btnCopyInoCode">Salin Kode</button>
           </div>
           <pre class="code-block-large"><code id="inoCodeBlock">/*
@@ -832,4 +857,5 @@ const float MAX_PUPUK_SEC = 5.0;
   <script src="js/chart.min.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

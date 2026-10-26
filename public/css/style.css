@@ -1302,48 +1302,93 @@ body {
   opacity: 0.8;
 }
 
-/* Preset Buttons */
-.preset-triggers {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.preset-label {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  font-weight: 600;
-}
-
-.preset-btns-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-}
-
-.btn-preset {
-  padding: 0.55rem 0.5rem;
-  background: rgba(255, 255, 255, 0.04);
+/* Slider Control Groups inside Actuator Cards */
+.slider-control-group {
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-family: var(--font-heading);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
   transition: all var(--transition-fast);
 }
 
-.btn-preset:hover {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.4);
-  color: var(--text-main);
-  transform: translateY(-2px);
+.slider-control-group:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.btn-preset-fert:hover {
-  background: rgba(132, 204, 22, 0.15);
-  border-color: rgba(132, 204, 22, 0.4);
+.range-display-fert {
+  color: var(--fert-primary);
+  background: rgba(132, 204, 22, 0.12);
+}
+
+.styled-range-fert::-webkit-slider-thumb {
+  background: var(--fert-primary);
+  box-shadow: 0 0 10px var(--fert-glow);
+}
+
+.styled-range-fert::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.styled-range-fert::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--fert-primary);
+  box-shadow: 0 0 10px var(--fert-glow);
+  cursor: pointer;
+  border: none;
+}
+
+/* ===================================================================
+   TOMBOL MATI / NONAKTIF SAAT MODE AUTO (HANYA DALAM MODE AUTO)
+   =================================================================== */
+.btn-actuator-main.mode-auto-disabled {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px dashed rgba(100, 116, 139, 0.35) !important;
+  color: #64748b !important;
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: grayscale(1) !important;
+  user-select: none;
+}
+
+.btn-actuator-main.mode-auto-disabled:hover {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border-color: rgba(100, 116, 139, 0.35) !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+}
+
+.btn-actuator-main.mode-auto-disabled .btn-power-icon {
+  stroke: #64748b !important;
+  opacity: 0.6;
+}
+
+.btn-actuator-main.mode-auto-disabled .btn-text {
+  color: #64748b !important;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+.slider-control-group.mode-auto-disabled {
+  opacity: 0.38;
+  filter: grayscale(0.9);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.slider-control-group.mode-auto-disabled .styled-range {
+  cursor: not-allowed;
+}
+
+.slider-control-group.mode-auto-disabled .range-display {
+  background: rgba(100, 116, 139, 0.15) !important;
+  color: #64748b !important;
 }
 
 /* ===================================================================

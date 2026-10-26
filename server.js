@@ -151,13 +151,13 @@ function onWateringStopped(keteranganCustom) {
   }
 }
 
-function onPupukStarted(mode, volumeExpected) {
+function onPupukStarted(mode, durasiExpected) {
   if (!activePupukSession) {
     activePupukSession = {
       startTime: Date.now(),
       mode: mode || systemState.controls.mode,
       kelembapanAwal: systemState.telemetry.kelembapan,
-      volumeExpected: volumeExpected || systemState.settings.dosisPupukMl
+      durasiExpected: durasiExpected || 10
     };
   }
 }
@@ -165,15 +165,16 @@ function onPupukStarted(mode, volumeExpected) {
 function onPupukStopped(keteranganCustom) {
   if (activePupukSession) {
     const elapsedSec = Math.max(1, Math.round((Date.now() - activePupukSession.startTime) / 1000));
-    const volume = activePupukSession.volumeExpected || 25;
+    const durasiDetik = Math.min(elapsedSec, 3600);
+    const volumeEstimasi = Number((durasiDetik * 0.05).toFixed(2));
     const kelembapanAkhir = systemState.telemetry.kelembapan;
-    const keterangan = keteranganCustom || `Aplikasi nutrisi fertigasi pupuk cair dialirkan sebanyak ${volume} ml`;
+    const keterangan = keteranganCustom || `Penyiraman pupuk cair selesai dialirkan (${durasiDetik} detik)`;
 
     db.logWateringEvent({
       tipe: 'PUPUK',
       mode: activePupukSession.mode,
-      durasi_detik: elapsedSec,
-      volume_estimasi: volume,
+      durasi_detik: durasiDetik,
+      volume_estimasi: volumeEstimasi,
       kelembapan_sebelum: activePupukSession.kelembapanAwal,
       kelembapan_sesudah: kelembapanAkhir,
       keterangan
@@ -437,16 +438,16 @@ app.post('/api/telemetry', (req, res) => {
 
 // 3. Kontrol pompa & mode dari web dashboard
 app.post('/api/controls', (req, res) => {
-  const { mode, pompaAir, pompaPupuk, durasiSiram, volumePupuk } = req.body;
+  const { mode, pompaAir, pompaPupuk, durasiSiram, volumePupuk, durasiPupuk } = req.body;
   let logItem = null;
 
   // Ganti Mode (Auto vs Manual)
   if (mode !== undefined && (mode === 'auto' || mode === 'manual')) {
     systemState.controls.mode = mode;
     if (mode === 'manual') {
-      logItem = addLog('MODE', 'Mode diubah ke MANUAL oleh Operator. Pompa dapat dikontrol bebas.', 'warning');
+      logItem = addLog('MODE', 'Mode diubah ke MANUAL oleh Operator. Tombol penyiraman manual aktif.', 'warning');
     } else {
-      logItem = addLog('MODE', 'Mode diubah ke AUTO. Sistem otomatis mengambil alih kendali penyiraman.', 'success');
+      logItem = addLog('MODE', 'Mode diubah ke AUTO. Sistem otomatis aktif, tombol manual dinonaktifkan.', 'success');
       checkAutoRules();
     }
   }
@@ -454,18 +455,27 @@ app.post('/api/controls', (req, res) => {
   // Kontrol Pompa Air
   if (pompaAir !== undefined) {
     const isNowOn = Boolean(pompaAir);
-    if (isNowOn && !systemState.controls.pompaAir) {
-      const durasi = durasiSiram || systemState.settings.durasiSiramOtomatisDetik;
-      onWateringStarted('manual', durasi);
-      logItem = addLog('POMPA AIR', `Penyiraman Air DINYALAKAN (Manual${durasi ? ` - durasi ${durasi}s` : ''}).`, 'success');
+    // Jika sistem dalam Mode Auto, blokir penyalaan manual
+    if (isNowOn && systemState.controls.mode === 'auto') {
+      return res.status(400).json({
+        success: false,
+        message: 'Tombol penyiraman dinonaktifkan saat Mode Auto aktif.',
+        controls: systemState.controls
+      });
+    }
 
-      // Auto-off timer untuk burst manual
+    if (isNowOn && !systemState.controls.pompaAir) {
+      const durasi = Math.min(60, Math.max(1, Number(durasiSiram) || 15));
+      onWateringStarted('manual', durasi);
+      logItem = addLog('POMPA AIR', `Penyiraman Air DINYALAKAN (Manual - durasi ${durasi} detik).`, 'success');
+
+      // Auto-off timer untuk penyiraman manual
       if (durasi && durasi > 0) {
         setTimeout(() => {
           if (systemState.controls.pompaAir) {
             systemState.controls.pompaAir = false;
-            onWateringStopped(`Penyiraman air manual selesai (${durasi}s).`);
-            addLog('POMPA AIR', `Penyiraman air selesai otomatis (${durasi}s).`, 'info');
+            onWateringStopped(`Penyiraman air manual selesai (${durasi} detik).`);
+            addLog('POMPA AIR', `Penyiraman air selesai otomatis (${durasi} detik).`, 'info');
             broadcast({
               type: 'CONTROLS_UPDATE',
               controls: systemState.controls,
@@ -484,24 +494,35 @@ app.post('/api/controls', (req, res) => {
   // Kontrol Pompa Pupuk
   if (pompaPupuk !== undefined) {
     const isNowOn = Boolean(pompaPupuk);
-    if (isNowOn && !systemState.controls.pompaPupuk) {
-      const vol = volumePupuk || systemState.settings.dosisPupukMl;
-      onPupukStarted('manual', vol);
-      logItem = addLog('POMPA PUPUK', `Penyiraman Pupuk Cair DIAKTIFKAN (${vol} ml).`, 'success');
+    // Jika sistem dalam Mode Auto, blokir penyalaan manual
+    if (isNowOn && systemState.controls.mode === 'auto') {
+      return res.status(400).json({
+        success: false,
+        message: 'Tombol penyiraman pupuk dinonaktifkan saat Mode Auto aktif.',
+        controls: systemState.controls
+      });
+    }
 
-      // Matikan otomatis setelah 5 detik simulasi dosis
-      setTimeout(() => {
-        if (systemState.controls.pompaPupuk) {
-          systemState.controls.pompaPupuk = false;
-          onPupukStopped(`Dosis pupuk selesai dialirkan (${vol} ml).`);
-          addLog('POMPA PUPUK', `Dosis pupuk selesai dialirkan (${vol} ml).`, 'info');
-          broadcast({
-            type: 'CONTROLS_UPDATE',
-            controls: systemState.controls,
-            log: activityLogs[0]
-          });
-        }
-      }, 5000);
+    if (isNowOn && !systemState.controls.pompaPupuk) {
+      const durasi = Math.min(60, Math.max(1, Number(durasiPupuk || durasiSiram) || 10));
+      onPupukStarted('manual', durasi);
+      logItem = addLog('POMPA PUPUK', `Penyiraman Pupuk Cair DIAKTIFKAN (${durasi} detik).`, 'success');
+
+      // Matikan otomatis setelah durasi detik
+      if (durasi && durasi > 0) {
+        setTimeout(() => {
+          if (systemState.controls.pompaPupuk) {
+            systemState.controls.pompaPupuk = false;
+            onPupukStopped(`Penyiraman pupuk selesai dialirkan (${durasi} detik).`);
+            addLog('POMPA PUPUK', `Penyiraman pupuk selesai dialirkan (${durasi} detik).`, 'info');
+            broadcast({
+              type: 'CONTROLS_UPDATE',
+              controls: systemState.controls,
+              log: activityLogs[0]
+            });
+          }
+        }, durasi * 1000);
+      }
     } else if (!isNowOn && systemState.controls.pompaPupuk) {
       onPupukStopped('Pompa pupuk dimatikan.');
       logItem = addLog('POMPA PUPUK', 'Pompa Pupuk DIMATIKAN.', 'info');
